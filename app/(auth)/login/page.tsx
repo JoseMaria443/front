@@ -24,10 +24,8 @@ export default function LoginPage() {
 
         try {
             const userData = await authService.login(email, password);
-            // uso de zustand para guardar
             login(userData);
 
-            // redireccion mock del crm
             router.push("/dashboard");
         } catch (err) {
             setError("Credenciales incorrectas. Intenta de nuevo.");
@@ -38,11 +36,10 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen w-full relative flex bg-corporate-light overflow-hidden">
-            {/* Fondo de onda SVG de pantalla completa (columna izquierda) */}
             <div className="absolute inset-y-0 left-0 w-[50vw] xl:w-[53vw] pointer-events-none z-0 hidden lg:block">
-                <img 
-                    src="/login-bg.svg" 
-                    alt="Fondo de onda" 
+                <img
+                    src="/login-bg.svg"
+                    alt="Fondo de onda"
                     className="w-full h-full object-cover object-right"
                 />
             </div>

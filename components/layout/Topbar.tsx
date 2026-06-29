@@ -1,33 +1,49 @@
 "use client";
 
-import { useSessionStore } from '../../store/session.store';
-//lectura de zustand de nombre de usuario de memoria global
+import { Badge } from "../ui/Badge";
+import { useSessionStore } from "../../store/session.store"; //lectura de zustand de usuario nombre global
+import { usePathname } from "next/navigation";
+
 export function Topbar() {
     const user = useSessionStore((state) => state.user);
+    const pathname = usePathname();
+
+    // pequeña utilidad para capitalizar la ruta actual y usarla como título, ya no declaramos multiples de momento
+    const pageTitle = pathname.split("/").pop() || "Dashboard";
+    const formattedTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1).replace("-", " ");
+
+    const getInitials = (name?: string) => {
+        if (!name) return "US";
+        const parts = name.replace("Dr. ", "").replace("Ing. ", "").trim().split(" ");
+        if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+        return name.substring(0, 2).toUpperCase();
+    };
 
     return (
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-10">
-            <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-500">
-                    Ciclo Ene–Jun 2026
-                </span>
-            </div>
-
-            <div className="flex items-center gap-4">
+        <div className="space-y-6 mb-8 mt-4">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+                <nav className="text-sm text-gray-500">
+                    <span className="font-medium text-corporate-dark">SGC2I</span>
+                    <span className="mx-2">/</span>
+                    <span className="capitalize">{formattedTitle}</span>
+                </nav>
                 <div className="flex items-center gap-3">
-                    <div className="text-right hidden md:block">
-                        <p className="text-sm font-semibold text-corporate-dark leading-tight">
-                            {user?.nombre || "Usuario"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                            {user?.cargos?.[0]?.nombre || "Área Administrativa"}
-                        </p>
+                    <div className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700 bg-white">
+                        <span className="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
+                        Ciclo Ene-Jun 2026
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-corporate-blue flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                        {user?.nombre?.substring(0, 2).toUpperCase() || "US"}
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-corporate-blue text-sm font-semibold text-white shadow-sm">
+                        {getInitials(user?.nombre)}
                     </div>
                 </div>
             </div>
-        </header>
+
+            <div className="flex items-start justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-corporate-dark capitalize">{formattedTitle}</h1>
+                    <p className="mt-1 text-sm text-gray-500">Gestión y control de actividades</p>
+                </div>
+            </div>
+        </div>
     );
 }
