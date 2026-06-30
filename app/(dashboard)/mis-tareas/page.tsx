@@ -1,4 +1,5 @@
 "use client";
+//Descripcion --> NO (Historia)
 
 import { useState } from "react";
 import { EvidenceSlideOver } from "../../../components/mis-tareas/EvidenceSlideOver";
@@ -128,8 +129,8 @@ export default function MisTareasPage() {
                                                 <div
                                                     key={i}
                                                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white ${initials === 'CG' ? 'bg-emerald-500' :
-                                                            initials === 'MR' ? 'bg-corporate-blue' :
-                                                                initials === 'AL' ? 'bg-violet-500' : 'bg-pink-500'
+                                                        initials === 'MR' ? 'bg-corporate-blue' :
+                                                            initials === 'AL' ? 'bg-violet-500' : 'bg-pink-500'
                                                         }`}
                                                 >
                                                     {initials}

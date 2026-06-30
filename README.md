@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Requisitos Previos
 
-First, run the development server:
+1. **Git**: Para control de versiones.
+2. **Node.js**: Versión 20.x (LTS) o superior.
 
-```bash
+## Instalación y Ejecución
+
+Sigue estos pasos para levantar el entorno de desarrollo:
+
+1. **Clonar el repositorio**:
+   ```bash
+   git clone <url del repo>
+   cd sgc2if
+Instalar dependencias:
+Esto instalará las librerías base y las dependencias estructurales requeridas (Zustand, Zod, Lucide React).
+
+Bash
+npm install
+Iniciar el servidor local:
+
+Bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Ruta de acceso inicial para pruebas: http://localhost:3000/login
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Estructura del Proyecto
+La arquitectura mantiene una estricta separación de responsabilidades. Todos los directorios principales se encuentran directamente en la raíz (no se utiliza una carpeta src):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+/app: Enrutador de Next.js y agrupación de vistas ((auth), (dashboard)).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+/components/ui: Componentes visuales atómicos y reutilizables (Botones, Inputs, Badges).
 
-## Learn More
+/components/layout: Estructura visual global (Sidebar, Topbar).
 
-To learn more about Next.js, take a look at the following resources:
+/models: Esquemas de validación y tipado estricto definidos con Zod.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+/services: Capa de abstracción encargada de interactuar con el backend o datos simulados (Mocks).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+/store: Manejadores de estado global utilizando Zustand.
 
-## Deploy on Vercel
+/public: Archivos estáticos y recursos gráficos (SVGs).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Reglas Estrictas de Desarrollo
+Cero lógica de datos en vistas: Todo consumo de información o peticiones (fetch) debe aislarse en la carpeta /services. Está prohibido realizar peticiones directas desde los componentes en /app.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Uso de componentes UI: Se deben utilizar estrictamente los componentes base de /components/ui para garantizar la consistencia visual del sistema.
+
+Gestión de estado global: Utilizar Zustand en la carpeta /store para datos compartidos entre múltiples vistas (ej. sesión de usuario), evitando pasar props innecesariamente por varias capas (prop drilling).
