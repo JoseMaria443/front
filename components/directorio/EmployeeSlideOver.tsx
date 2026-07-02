@@ -10,11 +10,21 @@ const CARGOS_DISPONIBLES = [
     "Administrador", "Tutor", "Asesor de Movilidad"
 ];
 
+export interface EmpleadoNuevo {
+    id: number;
+    nombre: string;
+    correo: string;
+    area: string;
+    cargos: string[];
+    iniciales: string;
+    activo: boolean;
+}
+
 interface EmployeeSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
     areas: string[];
-    onSave: (empleado: any) => void;
+    onSave: (empleado: EmpleadoNuevo) => void;
 }
 
 export function EmployeeSlideOver({ isOpen, onClose, areas, onSave }: EmployeeSlideOverProps) {

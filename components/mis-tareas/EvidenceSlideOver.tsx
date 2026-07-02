@@ -6,10 +6,21 @@ import { X, Maximize2, Minimize2, UploadCloud } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 
+export interface MockTask {
+    id: number;
+    code: string;
+    taskCode: string;
+    title: string;
+    urgency: string;
+    urgencyType: string;
+    date: string;
+    avatars: string[];
+}
+
 interface EvidenceSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
-    task: any | null; // manejo de tipado, falta conectar con zod
+    task: MockTask | null; // manejo de tipado, falta conectar con zod
 }
 
 export function EvidenceSlideOver({ isOpen, onClose, task }: EvidenceSlideOverProps) {

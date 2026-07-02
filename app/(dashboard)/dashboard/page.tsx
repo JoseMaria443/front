@@ -55,8 +55,12 @@ export default function DashboardPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-end">
-                <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-500 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-corporate-dark">Dashboard</h1>
+                    <p className="text-sm text-gray-500 mt-1">Gestión y control de actividades</p>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-500 shadow-sm self-end sm:self-auto">
                     <Clock className="h-4 w-4" />
                     Última sincronización: hace 1 min
                 </div>

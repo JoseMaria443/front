@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "../ui/Badge";
 import { useSessionStore } from "../../store/session.store"; //lectura de zustand de usuario nombre global
 import { usePathname } from "next/navigation";
 
@@ -20,7 +19,7 @@ export function Topbar() {
     };
 
     return (
-        <div className="space-y-6 mb-8 mt-4">
+        <div className="mb-8 mt-4">
             <div className="flex items-center justify-between border-b border-gray-200 pb-4">
                 <nav className="text-sm text-gray-500">
                     <span className="font-medium text-corporate-dark">SGC2I</span>
@@ -35,13 +34,6 @@ export function Topbar() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-corporate-blue text-sm font-semibold text-white shadow-sm">
                         {getInitials(user?.nombre)}
                     </div>
-                </div>
-            </div>
-
-            <div className="flex items-start justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-corporate-dark capitalize">{formattedTitle}</h1>
-                    <p className="mt-1 text-sm text-gray-500">Gestión y control de actividades</p>
                 </div>
             </div>
         </div>

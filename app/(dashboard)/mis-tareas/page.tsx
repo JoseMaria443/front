@@ -2,7 +2,7 @@
 //Descripcion --> NO (Historia)
 
 import { useState } from "react";
-import { EvidenceSlideOver } from "../../../components/mis-tareas/EvidenceSlideOver";
+import { EvidenceSlideOver, MockTask } from "../../../components/mis-tareas/EvidenceSlideOver";
 import { Button } from "../../../components/ui/Button";
 import { Clock, AlertTriangle, UploadCloud, Calendar } from "lucide-react";
 
@@ -50,10 +50,10 @@ const mockTasks = [
 ];
 
 export default function MisTareasPage() {
-    const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [selectedTask, setSelectedTask] = useState<MockTask | null>(null);
     const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
 
-    const openEvidenceModal = (task: any) => {
+    const openEvidenceModal = (task: MockTask) => {
         setSelectedTask(task);
         setIsSlideOverOpen(true);
     };
