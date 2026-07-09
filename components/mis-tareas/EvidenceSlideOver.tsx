@@ -7,7 +7,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 
 export interface MockTask {
-    id: number;
+    id: number | string;
     code: string;
     taskCode: string;
     title: string;
@@ -21,6 +21,7 @@ interface EvidenceSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
     task: MockTask | null; // manejo de tipado, falta conectar con zod
+    onSuccess?: (evs: { doi: string; descripcion: string; urlArchivo: string; nombreOriginal: string; fechaRegistro: string }[]) => void;
 }
 
 interface EvidenceFormState {
@@ -30,7 +31,7 @@ interface EvidenceFormState {
     fileName: string | null;
 }
 
-export function EvidenceSlideOver({ isOpen, onClose, task }: EvidenceSlideOverProps) {
+export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: EvidenceSlideOverProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
     const [evidences, setEvidences] = useState<EvidenceFormState[]>([
@@ -225,7 +226,19 @@ export function EvidenceSlideOver({ isOpen, onClose, task }: EvidenceSlideOverPr
                         {isValid ? (
                             <Button
                                 onClick={() => {
-                                    alert(`¡Éxito! Se han registrado ${evidences.length} evidencias para la tarea: ${task?.title}`);
+                                    if (onSuccess) {
+                                        onSuccess(
+                                            evidences.map((e) => ({
+                                                doi: e.doi,
+                                                descripcion: e.description,
+                                                urlArchivo: "https://example.com/files/" + (e.fileName || "evidencia.pdf"),
+                                                nombreOriginal: e.fileName || "evidencia.pdf",
+                                                fechaRegistro: new Date().toISOString()
+                                            }))
+                                        );
+                                    } else {
+                                        alert(`¡Éxito! Se han registrado ${evidences.length} evidencias para la tarea: ${task?.title}`);
+                                    }
                                     onClose();
                                 }}
                                 className="w-full py-6 text-sm bg-corporate-accent hover:bg-corporate-blue text-white rounded-xl font-semibold transition-all duration-200 cursor-pointer"
