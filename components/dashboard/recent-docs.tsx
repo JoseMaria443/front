@@ -19,7 +19,7 @@ export function RecentDocs({ docs, onDocClick }: RecentDocsProps) {
         <div className="rounded-2xl bg-white shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
             <div className="flex flex-row items-center justify-between p-6 pb-4 border-b border-gray-50">
                 <h3 className="text-lg font-semibold text-corporate-dark">Documentos Recientes</h3>
-                <Link href="/comunicados" passHref legacyBehavior>
+                <Link href="/comunicados" passHref>
                     <Button variant="ghost" className="text-corporate-accent hover:text-corporate-blue text-sm h-8 px-2 cursor-pointer">
                         Ver todos <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
@@ -42,8 +42,8 @@ export function RecentDocs({ docs, onDocClick }: RecentDocsProps) {
                                 const estiloTipo = tipoStyles[tipoNombre] || "text-gray-500";
 
                                 return (
-                                    <tr 
-                                        key={doc.idComunicado} 
+                                    <tr
+                                        key={doc.idComunicado}
                                         onClick={() => onDocClick(doc)}
                                         className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
                                     >
