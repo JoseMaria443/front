@@ -61,7 +61,14 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
             },
             tipoComunicado: tipoSeleccionado ? { idTipoComunicado: idTipo, nombre: tipoSeleccionado.nombre } : undefined,
             medioRecepcion: medioSeleccionado ? { idMedioRecepcion: idMedio, nombre: medioSeleccionado.nombre } : undefined,
-            tareas: []
+            tareas: [],
+            archivos: [
+                {
+                    idArchivo: Math.random().toString(),
+                    urlArchivo: `https://universidad.edu.mx/files/${folio.toLowerCase().replace(/\s+/g, '_')}_archivo.pdf`,
+                    nombreOriginal: `${folio.toLowerCase().replace(/\s+/g, '_')}_archivo.pdf`
+                }
+            ]
         };
 
         agregarComunicado(nuevoComunicado);

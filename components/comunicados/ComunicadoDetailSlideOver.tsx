@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, FileText, ExternalLink } from "lucide-react";
 import type { Comunicado } from "../../models/comunicado.schema";
 
 interface ComunicadoDetailSlideOverProps {
@@ -102,12 +102,38 @@ export function ComunicadoDetailSlideOver({ isOpen, onClose, comunicado }: Comun
                         </div>
                     </div>
 
-                    {/* Empleado de Registro */}
                     <div className="border-t border-gray-100 pt-4 space-y-1">
                         <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Registrado Por</span>
                         <p className="text-gray-700 text-xs">
                             {comunicado.empleadoRegistro?.nombre || "Dr. Martínez Reyes (Coordinador)"}
                         </p>
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-4 space-y-2">
+                        <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Archivos Adjuntos</span>
+                        {comunicado.archivos && comunicado.archivos.length > 0 ? (
+                            <div className="space-y-2">
+                                {comunicado.archivos.map((archivo) => (
+                                    <a
+                                        key={archivo.idArchivo}
+                                        href={archivo.urlArchivo}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-colors group cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-2.5 truncate">
+                                            <FileText className="h-4 w-4 text-corporate-accent shrink-0" />
+                                            <span className="text-xs font-semibold text-corporate-dark truncate">
+                                                {archivo.nombreOriginal}
+                                            </span>
+                                        </div>
+                                        <ExternalLink className="h-3.5 w-3.5 text-gray-400 group-hover:text-corporate-accent transition-colors shrink-0" />
+                                    </a>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-gray-400 italic">No hay archivos adjuntos en este comunicado</p>
+                        )}
                     </div>
                 </div>
 

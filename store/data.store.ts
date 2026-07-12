@@ -79,6 +79,13 @@ const initialComunicados: Comunicado[] = [
                 ],
                 evidencias: []
             }
+        ],
+        archivos: [
+            {
+                idArchivo: "f1",
+                urlArchivo: "https://universidad.edu.mx/files/plan_academico_2025.pdf",
+                nombreOriginal: "plan_academico_2025.pdf"
+            }
         ]
     },
     {
@@ -112,6 +119,13 @@ const initialComunicados: Comunicado[] = [
                     }
                 ],
                 evidencias: []
+            }
+        ],
+        archivos: [
+            {
+                idArchivo: "f2",
+                urlArchivo: "https://universidad.edu.mx/files/convocatoria_docente_2025.pdf",
+                nombreOriginal: "convocatoria_docente_2025.pdf"
             }
         ]
     }

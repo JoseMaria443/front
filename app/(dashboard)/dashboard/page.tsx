@@ -1,29 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { StatCard } from "../../../components/dashboard/stat-card";
 import { RecentDocs } from "../../../components/dashboard/recent-docs";
 import { MessageSquare, CheckSquare, Upload, Clock } from "lucide-react";
-import { comunicadosService } from "../../../services/comunicados.service";
+import { useDataStore } from "../../../store/data.store";
+import { ComunicadoDetailSlideOver } from "../../../components/comunicados/ComunicadoDetailSlideOver";
 import type { Comunicado } from "../../../models/comunicado.schema";
 
 export default function DashboardPage() {
-    const [comunicados, setComunicados] = useState<Comunicado[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const cargarDatos = async () => {
-            try {
-                const datos = await comunicadosService.obtenerRecientes();
-                setComunicados(datos);
-            } catch (error) {
-                console.error("Error al cargar comunicados", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        cargarDatos();
-    }, []);
+    const { comunicados } = useDataStore();
+    const [selectedComunicado, setSelectedComunicado] = useState<Comunicado | null>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
 
     const totalComunicados = comunicados.length;
 
@@ -32,22 +20,27 @@ export default function DashboardPage() {
         return total + pendientes;
     }, 0);
 
+    const totalEvidencias = comunicados.reduce((total, com) => {
+        const evidencias = com.tareas?.reduce((tEv, t) => tEv + (t.evidencias?.length || 0), 0) || 0;
+        return total + evidencias;
+    }, 0);
+
     const stats = [
         {
             title: "Total de Comunicados",
-            value: isLoading ? "..." : totalComunicados.toString(),
+            value: totalComunicados.toString(),
             trend: { label: "Actualizado hoy", isPositive: true },
             icon: <MessageSquare className="h-5 w-5 text-corporate-accent" />,
         },
         {
             title: "Tareas Pendientes",
-            value: isLoading ? "..." : tareasPendientes.toString(),
+            value: tareasPendientes.toString(),
             trend: { label: "Requieren atención", isPositive: false },
             icon: <CheckSquare className="h-5 w-5 text-red-500" />,
         },
         {
             title: "Evidencias Entregadas",
-            value: "0",
+            value: totalEvidencias.toString(),
             trend: { label: "Al día", isPositive: true },
             icon: <Upload className="h-5 w-5 text-emerald-500" />,
         },
@@ -72,11 +65,19 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            {isLoading ? (
-                <div className="animate-pulse h-64 bg-gray-200 rounded-2xl w-full"></div>
-            ) : (
-                <RecentDocs docs={comunicados} />
-            )}
+            <RecentDocs 
+                docs={comunicados} 
+                onDocClick={(doc) => {
+                    setSelectedComunicado(doc);
+                    setIsDetailOpen(true);
+                }}
+            />
+
+            <ComunicadoDetailSlideOver
+                isOpen={isDetailOpen}
+                onClose={() => setIsDetailOpen(false)}
+                comunicado={selectedComunicado}
+            />
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import { Button } from "../ui/Button";
+import Link from "next/link";
 import type { Comunicado } from "../../models/comunicado.schema";
 
 const tipoStyles: Record<string, string> = {
@@ -10,16 +11,19 @@ const tipoStyles: Record<string, string> = {
 
 interface RecentDocsProps {
     docs: Comunicado[];
+    onDocClick: (doc: Comunicado) => void;
 }
 
-export function RecentDocs({ docs }: RecentDocsProps) {
+export function RecentDocs({ docs, onDocClick }: RecentDocsProps) {
     return (
         <div className="rounded-2xl bg-white shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
             <div className="flex flex-row items-center justify-between p-6 pb-4 border-b border-gray-50">
                 <h3 className="text-lg font-semibold text-corporate-dark">Documentos Recientes</h3>
-                <Button variant="ghost" className="text-corporate-accent hover:text-corporate-blue text-sm h-8 px-2">
-                    Ver todos <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
+                <Link href="/comunicados" passHref legacyBehavior>
+                    <Button variant="ghost" className="text-corporate-accent hover:text-corporate-blue text-sm h-8 px-2 cursor-pointer">
+                        Ver todos <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                </Link>
             </div>
             <div className="p-6">
                 <div className="overflow-x-auto">
@@ -38,7 +42,11 @@ export function RecentDocs({ docs }: RecentDocsProps) {
                                 const estiloTipo = tipoStyles[tipoNombre] || "text-gray-500";
 
                                 return (
-                                    <tr key={doc.idComunicado} className="group hover:bg-gray-50/50 transition-colors">
+                                    <tr 
+                                        key={doc.idComunicado} 
+                                        onClick={() => onDocClick(doc)}
+                                        className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                    >
                                         <td className="py-4 pr-4">
                                             <span className="text-sm font-semibold text-corporate-accent">{doc.folioDoi}</span>
                                         </td>
