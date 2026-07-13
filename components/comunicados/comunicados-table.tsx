@@ -7,6 +7,7 @@ import { useDataStore } from "../../store/data.store";
 import { NewTaskSlideOver } from "./NewTaskSlideOver";
 import { ComunicadoDetailSlideOver } from "./ComunicadoDetailSlideOver";
 import { EvidenceSlideOver } from "../mis-tareas/EvidenceSlideOver";
+import { TaskDetailSlideOver } from "./TaskDetailSlideOver";
 
 const medioStyles: Record<string, string> = {
     "Oficio Físico": "bg-red-50 text-red-600 border-red-100",
@@ -36,9 +37,10 @@ export function ComunicadosTable() {
     // States for row expansion
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     
-    // States for SlideOvers
     const [selectedComunicado, setSelectedComunicado] = useState<Comunicado | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<Tarea | null>(null);
+    const [isTaskDetailSlideOverOpen, setIsTaskDetailSlideOverOpen] = useState(false);
     
     const [activeComunicadoIdForNewTask, setActiveComunicadoIdForNewTask] = useState<string | null>(null);
     const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
@@ -181,7 +183,11 @@ export function ComunicadosTable() {
                                                         {item.tareas.map((task) => (
                                                             <div 
                                                                 key={task.idTarea} 
-                                                                className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm space-y-3"
+                                                                onClick={() => {
+                                                                    setSelectedTaskForDetail(task);
+                                                                    setIsTaskDetailSlideOverOpen(true);
+                                                                }}
+                                                                className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm space-y-3 hover:bg-gray-50/50 cursor-pointer transition-colors duration-150"
                                                             >
                                                                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                                                                     <div>
@@ -334,6 +340,12 @@ export function ComunicadosTable() {
                     avatars: []
                 } : null}
                 onSuccess={handleEvidenceSuccess}
+            />
+
+            <TaskDetailSlideOver
+                isOpen={isTaskDetailSlideOverOpen}
+                onClose={() => setIsTaskDetailSlideOverOpen(false)}
+                task={selectedTaskForDetail}
             />
         </div>
     );
