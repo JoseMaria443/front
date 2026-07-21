@@ -27,8 +27,9 @@ export default function LoginPage() {
             login(user, token);
 
             router.push("/dashboard");
-        } catch (err) {
-            setError("Credenciales incorrectas. Intenta de nuevo.");
+        } catch (err: any) {
+            const msg = err.response?.data?.message || err.response?.data?.detail || "Credenciales incorrectas. Intenta de nuevo.";
+            setError(msg);
         } finally {
             setIsLoading(false);
         }
