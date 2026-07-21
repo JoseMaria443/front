@@ -23,8 +23,8 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const userData = await authService.login(email, password);
-            login(userData);
+            const { user, token } = await authService.login(email, password);
+            login(user, token);
 
             router.push("/dashboard");
         } catch (err) {

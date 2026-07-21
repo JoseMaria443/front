@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/Button";
-import { ChevronLeft, GraduationCap, LayoutDashboard, FileText, CheckSquare, Users, Settings, Bell } from "lucide-react";
+import { ChevronLeft, GraduationCap, LayoutDashboard, FileText, CheckSquare, Users, Settings, Bell, LogOut } from "lucide-react";
 import { useSessionStore } from "../../store/session.store";
 
 const navItems = [
@@ -23,7 +23,14 @@ const bottomNavItems = [
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
     const user = useSessionStore((state) => state.user);
+    const logout = useSessionStore((state) => state.logout);
+
+    const handleLogout = () => {
+        logout();
+        router.push("/login");
+    };
 
     const getInitials = (name?: string) => {
         if (!name) return "US";
@@ -108,16 +115,30 @@ export function Sidebar() {
                         </li>
                     ))}
                 </ul>
-                <div className={cn("mt-4 flex items-center gap-3 border-t border-slate-700 pt-4", collapsed && "justify-center")}>
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-corporate-blue text-sm font-semibold">
-                        {getInitials(user?.nombre)}
-                    </div>
-                    {!collapsed && (
-                        <div className="overflow-hidden">
-                            <p className="text-sm font-medium truncate">{user?.nombre || "Usuario"}</p>
-                            <p className="text-xs text-slate-400 truncate">{user?.cargos?.[0]?.nombre || "Área Administrativa"}</p>
+                <div className="mt-4 flex flex-col gap-2 border-t border-slate-700 pt-4">
+                    <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-corporate-blue text-sm font-semibold">
+                            {getInitials(user?.nombre)}
                         </div>
-                    )}
+                        {!collapsed && (
+                            <div className="overflow-hidden flex-1">
+                                <p className="text-sm font-medium truncate">{user?.nombre || "Usuario"}</p>
+                                <p className="text-xs text-slate-400 truncate">{user?.cargos?.[0]?.nombre || "Área Administrativa"}</p>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <button
+                        onClick={handleLogout}
+                        className={cn(
+                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-red-950/30 hover:text-red-400 transition-colors cursor-pointer w-full text-left",
+                            collapsed && "justify-center px-2"
+                        )}
+                        title="Cerrar Sesión"
+                    >
+                        <LogOut className="h-5 w-5" />
+                        {!collapsed && <span className="truncate">Cerrar Sesión</span>}
+                    </button>
                 </div>
             </div>
         </aside>
