@@ -21,13 +21,13 @@ interface CatalogoConfig {
 }
 
 const CATALOGOS_CONFIG: Record<string, CatalogoConfig> = {
-    "Áreas": { label: "Áreas", endpoint: "/api/areas", isReadOnly: false, nameKey: "nombre" },
-    "Cargos": { label: "Cargos", endpoint: "/api/cargos", isReadOnly: false, nameKey: "nombre" },
-    "Tipos de Comunicado": { label: "Tipos de Comunicado", endpoint: "/api/tipos-comunicado", isReadOnly: false, nameKey: "nombre" },
-    "Medios de Recepción": { label: "Medios de Recepción", endpoint: "/api/medios-recepcion", isReadOnly: false, nameKey: "nombre" },
-    "Roles de Destinatario": { label: "Roles de Destinatario", endpoint: "/api/roles-destinatario", isReadOnly: false, nameKey: "descripcion_rol" },
-    "Roles de Responsable": { label: "Roles de Responsable", endpoint: "/api/roles-responsable", isReadOnly: false, nameKey: "descripcion_rol" },
-    "Estados de Tarea": { label: "Estados de Tarea", endpoint: "/api/estados-tarea", isReadOnly: true, nameKey: "nombre" },
+    "Áreas": { label: "Áreas", endpoint: "/areas", isReadOnly: false, nameKey: "nombre" },
+    "Cargos": { label: "Cargos", endpoint: "/cargos", isReadOnly: false, nameKey: "nombre" },
+    "Tipos de Comunicado": { label: "Tipos de Comunicado", endpoint: "/tipos-comunicado", isReadOnly: false, nameKey: "nombre" },
+    "Medios de Recepción": { label: "Medios de Recepción", endpoint: "/medios-recepcion", isReadOnly: false, nameKey: "nombre" },
+    "Roles de Destinatario": { label: "Roles de Destinatario", endpoint: "/roles-destinatario", isReadOnly: false, nameKey: "descripcion_rol" },
+    "Roles de Responsable": { label: "Roles de Responsable", endpoint: "/roles-responsable", isReadOnly: false, nameKey: "descripcion_rol" },
+    "Estados de Tarea": { label: "Estados de Tarea", endpoint: "/estados-tarea", isReadOnly: true, nameKey: "nombre" },
 };
 
 const MENU_CATALOGOS = Object.keys(CATALOGOS_CONFIG);
