@@ -18,6 +18,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
     const [tema, setTema] = useState("");
     const [idEmisor, setIdEmisor] = useState("");
     const [fechaEmision, setFechaEmision] = useState("");
+    const [fechaRecepcion, setFechaRecepcion] = useState("");
     const [idMedio, setIdMedio] = useState("");
     const [idTipo, setIdTipo] = useState("");
     const [destinatariosSeleccionados, setDestinatariosSeleccionados] = useState<string[]>([]);
@@ -62,6 +63,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
         tema.trim() !== "" &&
         idEmisor !== "" &&
         fechaEmision !== "" &&
+        fechaRecepcion !== "" &&
         idMedio !== "" &&
         idTipo !== "" &&
         destinatariosSeleccionados.length > 0 &&
@@ -80,7 +82,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
             tema,
             idEmisor,
             fechaEmision: new Date(fechaEmision).toISOString(),
-            fechaRecepcion: new Date().toISOString(),
+            fechaRecepcion: new Date(fechaRecepcion).toISOString(),
             idTipoComunicado: idTipo,
             idMedioRecepcion: idMedio,
             destinatarios: destinatariosSeleccionados.map(idDest => ({
@@ -99,6 +101,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
             setTema("");
             setIdEmisor("");
             setFechaEmision("");
+            setFechaRecepcion("");
             setIdMedio("");
             setIdTipo("");
             setDestinatariosSeleccionados([]);
@@ -220,6 +223,20 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
                             className="h-11 bg-white"
                             value={fechaEmision}
                             onChange={(e) => setFechaEmision(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    {/* Fecha de Recepción */}
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-700">
+                            Fecha de Recepción <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                            type="datetime-local"
+                            className="h-11 bg-white"
+                            value={fechaRecepcion}
+                            onChange={(e) => setFechaRecepcion(e.target.value)}
                             required
                         />
                     </div>

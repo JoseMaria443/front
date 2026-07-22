@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Calendar } from "lucide-react";
+import { X, Calendar, UploadCloud } from "lucide-react";
 import type { Tarea } from "../../models/comunicado.schema";
 
 interface TaskDetailSlideOverProps {
@@ -114,6 +114,34 @@ export function TaskDetailSlideOver({ isOpen, onClose, task }: TaskDetailSlideOv
                                             <p className="text-xs font-bold text-corporate-dark">{colab.nombre}</p>
                                             <p className="text-[10px] text-gray-400">{colab.email}</p>
                                         </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Evidencias en SlideOver de Detalles */}
+                    {task.evidencias && task.evidencias.length > 0 && (
+                        <div className="space-y-2 border-t border-gray-100 pt-4">
+                            <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Evidencias Cargadas</span>
+                            <div className="space-y-2">
+                                {task.evidencias.map((ev, idx) => (
+                                    <div key={ev.idArchivoEvidencia || idx} className="bg-slate-50 border border-slate-100 p-3 rounded-lg flex items-center justify-between gap-3 shadow-sm">
+                                        <div className="truncate pr-2">
+                                            <p className="text-xs font-bold text-corporate-dark truncate">{ev.nombreOriginal}</p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                                DOI: <span className="font-semibold text-corporate-accent">{ev.doi}</span> · {new Date(ev.fechaRegistro).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <a
+                                            href={ev.urlArchivo}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center justify-center p-2 rounded-lg bg-white border border-gray-200 text-corporate-accent hover:bg-blue-50 transition-colors shadow-sm cursor-pointer"
+                                            title="Ver archivo de evidencia"
+                                        >
+                                            <UploadCloud className="h-4 w-4" />
+                                        </a>
                                     </div>
                                 ))}
                             </div>
