@@ -117,6 +117,10 @@ export function ComunicadoDetailSlideOver({ isOpen, onClose, comunicado }: Comun
                                     <a
                                         key={archivo.idArchivo}
                                         href={archivo.urlArchivo}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            console.log("Descarga pendiente de Cloudinary");
+                                        }}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-colors group cursor-pointer"
