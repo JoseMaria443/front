@@ -32,8 +32,6 @@ export function Sidebar() {
         router.push("/login");
     };
 
-    if (!user) return null;
-
     const getInitials = (name?: string) => {
         if (!name) return "US";
         const parts = name.replace("Dr. ", "").replace("Ing. ", "").trim().split(" ");
@@ -124,7 +122,7 @@ export function Sidebar() {
                         </div>
                         {!collapsed && (
                             <div className="overflow-hidden flex-1">
-                                <p className="text-sm font-medium truncate">{user?.nombre || "Usuario"}</p>
+                                <p className="text-sm font-medium truncate">{user?.nombre || "Cargando..."}</p>
                                 <p className="text-xs text-slate-400 truncate">{user?.cargos?.[0]?.nombre || "Área Administrativa"}</p>
                             </div>
                         )}
