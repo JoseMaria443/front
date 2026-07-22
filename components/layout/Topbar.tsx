@@ -7,6 +7,8 @@ export function Topbar() {
     const user = useSessionStore((state) => state.user);
     const pathname = usePathname();
 
+    if (!user) return null;
+
     // pequeña utilidad para capitalizar la ruta actual y usarla como título, ya no declaramos multiples de momento
     const pageTitle = pathname.split("/").pop() || "Dashboard";
     const formattedTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1).replace("-", " ");

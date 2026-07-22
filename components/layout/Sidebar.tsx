@@ -32,6 +32,8 @@ export function Sidebar() {
         router.push("/login");
     };
 
+    if (!user) return null;
+
     const getInitials = (name?: string) => {
         if (!name) return "US";
         const parts = name.replace("Dr. ", "").replace("Ing. ", "").trim().split(" ");

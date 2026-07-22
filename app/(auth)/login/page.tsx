@@ -70,7 +70,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className="bg-white p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-4 border-corporate-dark">
-                            <form onSubmit={handleLogin} className="space-y-5">
+                            <form onSubmit={(e) => { e.preventDefault(); handleLogin(e); }} className="space-y-5">
 
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-bold text-corporate-dark uppercase tracking-wide">
