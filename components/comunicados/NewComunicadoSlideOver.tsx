@@ -16,11 +16,11 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
     const [folio, setFolio] = useState("");
     const [numComunicado, setNumComunicado] = useState("");
     const [tema, setTema] = useState("");
-    const [emisorNombre, setEmisorNombre] = useState("");
+    const [idEmisor, setIdEmisor] = useState("");
     const [fechaEmision, setFechaEmision] = useState("");
     const [idMedio, setIdMedio] = useState("");
     const [idTipo, setIdTipo] = useState("");
-    const [idDestinatario, setIdDestinatario] = useState("");
+    const [destinatariosSeleccionados, setDestinatariosSeleccionados] = useState<string[]>([]);
     const [idRolDestinatario, setIdRolDestinatario] = useState("");
 
     // Catalog States
@@ -60,11 +60,11 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
     const isFormValid = 
         folio.trim() !== "" &&
         tema.trim() !== "" &&
-        emisorNombre.trim() !== "" &&
+        idEmisor !== "" &&
         fechaEmision !== "" &&
         idMedio !== "" &&
         idTipo !== "" &&
-        idDestinatario !== "" &&
+        destinatariosSeleccionados.length > 0 &&
         idRolDestinatario !== "";
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -78,17 +78,15 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
             folioDoi: folio,
             numComunicado: numComunicado || `NUM-${folio}`,
             tema,
+            idEmisor,
             fechaEmision: new Date(fechaEmision).toISOString(),
             fechaRecepcion: new Date().toISOString(),
-            emisorNombre,
             idTipoComunicado: idTipo,
             idMedioRecepcion: idMedio,
-            destinatarios: [
-                {
-                    idDestinatario,
-                    idRolDestinatario
-                }
-            ],
+            destinatarios: destinatariosSeleccionados.map(idDest => ({
+                idDestinatario: idDest,
+                idRolDestinatario
+            })),
             archivoUrl: "https://simulacion-cloudinary.com/documento_adjunto.pdf"
         };
 
@@ -99,11 +97,11 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
             setFolio("");
             setNumComunicado("");
             setTema("");
-            setEmisorNombre("");
+            setIdEmisor("");
             setFechaEmision("");
             setIdMedio("");
             setIdTipo("");
-            setIdDestinatario("");
+            setDestinatariosSeleccionados([]);
             setIdRolDestinatario("");
             
             if (onSuccess) {
@@ -194,18 +192,22 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
                         />
                     </div>
 
-                    {/* Emisor (Interno/Externo) */}
+                    {/* Emisor */}
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-700">
-                            Emisor (Interno/Externo) <span className="text-red-500">*</span>
+                            Emisor <span className="text-red-500">*</span>
                         </label>
-                        <Input
-                            placeholder="Ej. Rectoría, Auditoría Externa, etc."
-                            className="h-11 bg-white"
-                            value={emisorNombre}
-                            onChange={(e) => setEmisorNombre(e.target.value)}
+                        <select
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-corporate-accent h-11"
+                            value={idEmisor}
+                            onChange={(e) => setIdEmisor(e.target.value)}
                             required
-                        />
+                        >
+                            <option value="">Selecciona el emisor...</option>
+                            {empleadosList.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.nombre}</option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Fecha de Emisión */}
@@ -258,18 +260,22 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
                         </select>
                     </div>
 
-                    {/* Destinatario */}
+                    {/* Destinatarios */}
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-700">
-                            Destinatario <span className="text-red-500">*</span>
+                            Destinatarios <span className="text-red-500">*</span>
                         </label>
+                        <p className="text-[10px] text-gray-400 mb-1">Manten presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varios</p>
                         <select
-                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-corporate-accent h-11"
-                            value={idDestinatario}
-                            onChange={(e) => setIdDestinatario(e.target.value)}
+                            multiple
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-corporate-accent min-h-[120px]"
+                            value={destinatariosSeleccionados}
+                            onChange={(e) => {
+                                const selected = Array.from(e.target.selectedOptions, option => option.value);
+                                setDestinatariosSeleccionados(selected);
+                            }}
                             required
                         >
-                            <option value="">Selecciona el empleado destinatario...</option>
                             {empleadosList.map(emp => (
                                 <option key={emp.id} value={emp.id}>{emp.nombre}</option>
                             ))}
