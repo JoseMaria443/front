@@ -43,7 +43,6 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
 
     // States for row expansion
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-    const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({});
     
     const [selectedComunicado, setSelectedComunicado] = useState<Comunicado | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -60,111 +59,18 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
         setIsLoading(true);
         try {
             const response = await api.get<any[]>('/comunicados/');
-            const tasksResponse = await api.get<any[]>('/tareas/');
-            const [tiposRes, mediosRes, areasRes, empsRes, rolesRespRes] = await Promise.all([
+            const [tiposRes, mediosRes, empsRes] = await Promise.all([
                 api.get<any[]>('/tipos-comunicado/todos'),
                 api.get<any[]>('/medios-recepcion/todos'),
-                api.get<any[]>('/areas/todos'),
-                api.get<any[]>('/api/empleado/?activo=true'),
-                api.get<any[]>('/roles-responsable/todos')
+                api.get<any[]>('/api/empleado/?activo=true')
             ]);
             
             const tiposMap = new Map(tiposRes.data.map(t => [t.id, t]));
             const mediosMap = new Map(mediosRes.data.map(m => [m.id, m]));
-            const areasMap = new Map(areasRes.data.map(a => [a.id, a]));
             const empsMap = new Map(empsRes.data.map(e => [e.id, e]));
-            const rolesRespMap = new Map(rolesRespRes.data.map(r => [r.id, r]));
-
-            // Group tasks by comunicadoId
-            const tasksByComunicado = new Map<string, any[]>();
-            for (const t of tasksResponse.data) {
-                const comId = t.idComunicado;
-                if (!tasksByComunicado.has(comId)) {
-                    tasksByComunicado.set(comId, []);
-                }
-                
-                const lideres: any[] = [];
-                const colaboradores: any[] = [];
-                for (const resp of t.responsables || []) {
-                    const emp = empsMap.get(resp.idResponsable);
-                    const rol = rolesRespMap.get(resp.idRolResponsable);
-                    const isColab = rol?.descripcion_rol?.toLowerCase().includes("apoyo") || 
-                                    rol?.descripcion_rol?.toLowerCase().includes("colaborador") ||
-                                    resp.idRolResponsable === "00000000-0000-0000-0000-000000000002"; // rol_apoyo_id
-                    
-                    const mappedEmp = emp ? {
-                        idEmpleado: emp.id,
-                        nombre: emp.nombre,
-                        email: emp.email,
-                        idArea: emp.idArea,
-                        activo: emp.activo
-                    } : undefined;
-                    
-                    if (isColab) {
-                        colaboradores.push(mappedEmp);
-                    } else {
-                        lideres.push({
-                            idResponsable: resp.idResponsable,
-                            idRolResponsable: resp.idRolResponsable,
-                            responsable: mappedEmp
-                        });
-                    }
-                }
-
-                const mappedTask = {
-                    idTarea: t.id,
-                    idComunicado: t.idComunicado,
-                    idEstadoTarea: t.idEstadoTarea,
-                    resumenActividad: t.resumenActividad,
-                    descripcion: t.descripcion,
-                    fechaEntrega: t.fechaEntrega,
-                    fechaRegistro: t.fechaRegistro,
-                    estado: { idEstadoTarea: t.idEstadoTarea, nombre: t.estado || "Asignada" },
-                    responsables: lideres,
-                    colaboradores: colaboradores,
-                    evidencias: []
-                };
-                
-                tasksByComunicado.get(comId)?.push(mappedTask);
-            }
-            
-            // Get all evidences
-            const evidencesResponse = await api.get<any[]>('/evidencias/');
-            const evidencesByTask = new Map<string, any[]>();
-            for (const ev of evidencesResponse.data) {
-                const tId = ev.idTarea;
-                if (!evidencesByTask.has(tId)) {
-                    evidencesByTask.set(tId, []);
-                }
-                const emp = empsMap.get(ev.idElaborador);
-                evidencesByTask.get(tId)?.push({
-                    idArchivoEvidencia: ev.id,
-                    doi: ev.doi,
-                    descripcion: ev.descripcion,
-                    urlArchivo: ev.urlArchivo,
-                    nombreOriginal: ev.nombreOriginal,
-                    idElaborador: ev.idElaborador,
-                    fechaRegistro: ev.fechaRegistro,
-                    elaborador: emp ? {
-                        idEmpleado: emp.id,
-                        nombre: emp.nombre,
-                        email: emp.email,
-                        idArea: emp.idArea,
-                        activo: emp.activo
-                    } : undefined
-                });
-            }
-
-            // Assign evidences to their tasks
-            for (const [comId, tList] of tasksByComunicado.entries()) {
-                for (const t of tList) {
-                    t.evidencias = evidencesByTask.get(t.idTarea) || [];
-                }
-            }
 
             const mapped: Comunicado[] = response.data.map((c) => {
                 const comId = c.id;
-                const emisorArea = areasMap.get(c.idEmisor);
                 const regEmp = empsMap.get(c.idEmpleadoRegistro);
 
                 return {
@@ -188,12 +94,12 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                     medioRecepcion: mediosMap.has(c.idMedioRecepcion)
                         ? { idMedioRecepcion: c.idMedioRecepcion, nombre: mediosMap.get(c.idMedioRecepcion).nombre }
                         : undefined,
-                    emisor: emisorArea ? {
-                        idEmpleado: emisorArea.id,
-                        nombre: emisorArea.nombre,
-                        email: "contacto@univ.edu.mx",
-                        idArea: emisorArea.id,
-                        activo: true
+                    emisor: empsMap.has(c.idEmisor) ? {
+                        idEmpleado: c.idEmisor,
+                        nombre: empsMap.get(c.idEmisor).nombre,
+                        email: empsMap.get(c.idEmisor).email,
+                        idArea: empsMap.get(c.idEmisor).idArea,
+                        activo: empsMap.get(c.idEmisor).activo
                     } : undefined,
                     empleadoRegistro: regEmp ? {
                         idEmpleado: regEmp.id,
@@ -202,7 +108,52 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                         idArea: regEmp.idArea,
                         activo: regEmp.activo
                     } : undefined,
-                    tareas: tasksByComunicado.get(comId) || [],
+                    tareas: (c.tareas || []).map((t: any) => {
+                        return {
+                            idTarea: t.id,
+                            idComunicado: t.idComunicado,
+                            idEstadoTarea: t.idEstadoTarea,
+                            resumenActividad: t.resumenActividad,
+                            descripcion: t.descripcion,
+                            fechaEntrega: t.fechaEntrega,
+                            fechaRegistro: t.fechaRegistro,
+                            estado: { idEstadoTarea: t.idEstadoTarea, nombre: t.estado || "Asignada" },
+                            responsables: (t.responsables || []).map((resp: any) => {
+                                const emp = empsMap.get(resp.idEmpleado);
+                                return {
+                                    idResponsable: resp.idEmpleado,
+                                    idRolResponsable: "00000000-0000-0000-0000-000000000001",
+                                    responsable: emp ? {
+                                        idEmpleado: emp.id,
+                                        nombre: emp.nombre,
+                                        email: emp.email,
+                                        idArea: emp.idArea,
+                                        activo: emp.activo
+                                    } : undefined
+                                };
+                            }),
+                            colaboradores: [],
+                            evidencias: (t.evidencias || []).map((ev: any) => {
+                                const emp = empsMap.get(ev.idElaborador || ev.idUsuario);
+                                return {
+                                    idArchivoEvidencia: ev.idArchivoEvidencia || ev.id,
+                                    doi: ev.doi,
+                                    descripcion: ev.descripcion || "",
+                                    urlArchivo: ev.urlArchivo,
+                                    nombreOriginal: ev.nombreOriginal,
+                                    idElaborador: ev.idElaborador || ev.idUsuario,
+                                    fechaRegistro: ev.fechaRegistro,
+                                    elaborador: emp ? {
+                                        idEmpleado: emp.id,
+                                        nombre: emp.nombre,
+                                        email: emp.email,
+                                        idArea: emp.idArea,
+                                        activo: emp.activo
+                                    } : undefined
+                                };
+                            })
+                        };
+                    }),
                     archivos: c.archivoUrl ? [
                         {
                             idArchivo: comId + "_file",
@@ -231,14 +182,6 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
         setExpandedRows(prev => ({
             ...prev,
             [id]: !prev[id]
-        }));
-    };
-
-    const toggleTaskEvidences = (taskId: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setExpandedTasks(prev => ({
-            ...prev,
-            [taskId]: !prev[taskId]
         }));
     };
 
@@ -387,24 +330,6 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                         </p>
                                                                     </div>
                                                                     <div className="flex items-center gap-3">
-                                                                        {task.evidencias && task.evidencias.length > 0 && (
-                                                                            <button
-                                                                                onClick={(e) => toggleTaskEvidences(task.idTarea, e)}
-                                                                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-corporate-accent bg-slate-50 hover:bg-blue-50/50 p-1.5 rounded-lg transition-colors border border-slate-200 shadow-sm cursor-pointer"
-                                                                            >
-                                                                                {expandedTasks[task.idTarea] ? (
-                                                                                    <>
-                                                                                        <ChevronDown className="h-3.5 w-3.5 text-corporate-accent" />
-                                                                                        <span>Ocultar Evidencias ({task.evidencias.length})</span>
-                                                                                    </>
-                                                                                ) : (
-                                                                                    <>
-                                                                                        <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
-                                                                                        <span>Ver Evidencias ({task.evidencias.length})</span>
-                                                                                    </>
-                                                                                )}
-                                                                            </button>
-                                                                        )}
                                                                         <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${getEstadoBadge(task.estado?.nombre)}`}>
                                                                             {task.estado?.nombre || "Asignada"}
                                                                         </span>
@@ -467,7 +392,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                     return null;
                                                                 })()}
 
-                                                                {task.evidencias && task.evidencias.length > 0 && expandedTasks[task.idTarea] && (
+                                                                {task.evidencias && task.evidencias.length > 0 && (
                                                                     <div className="mt-3 bg-slate-100/90 rounded-xl p-3 border border-slate-200/80 space-y-2 block relative z-10" onClick={(e) => e.stopPropagation()}>
                                                                         <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                                                                             Evidencias Cargadas ({task.evidencias.length})
