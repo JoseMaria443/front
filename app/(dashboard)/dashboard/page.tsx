@@ -63,20 +63,8 @@ export default function DashboardPage() {
                 medioRecepcion: mediosMap.has(c.idMedioRecepcion)
                     ? { idMedioRecepcion: c.idMedioRecepcion, nombre: mediosMap.get(c.idMedioRecepcion).nombre }
                     : undefined,
-                emisor: { 
-                    idEmpleado: c.idEmisor, 
-                    nombre: "Remitente Oficial", 
-                    email: "emisor@univ.edu.mx", 
-                    idArea: "a1", 
-                    activo: true 
-                },
-                empleadoRegistro: { 
-                    idEmpleado: c.idEmpleadoRegistro, 
-                    nombre: "Usuario de Registro", 
-                    email: "registro@univ.edu.mx", 
-                    idArea: "a1", 
-                    activo: true 
-                },
+                areaEmisoraNombre: c.areaEmisoraNombre,
+                empleadoRegistroNombre: c.empleadoRegistroNombre,
                 tareas: [],
                 archivos: []
             }));

@@ -82,5 +82,7 @@ export const ComunicadoSchema = z.object({
     destinatarios: z.array(ComunicadoDestinatarioSchema).optional(),
     archivos: z.array(ComunicadoArchivoSchema).optional(),
     tareas: z.array(TareaSchema).optional(),
+    areaEmisoraNombre: z.string().optional(),
+    empleadoRegistroNombre: z.string().optional(),
 });
 export type Comunicado = z.infer<typeof ComunicadoSchema>;

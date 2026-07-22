@@ -55,7 +55,7 @@ export function ComunicadoDetailSlideOver({ isOpen, onClose, comunicado }: Comun
                         <div className="space-y-1">
                             <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Área Emisora</span>
                             <span className="block font-medium text-corporate-dark text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                                {comunicado.emisor?.nombre || "N/A"}
+                                {comunicado.areaEmisoraNombre || 'Sin área asignada'}
                             </span>
                         </div>
                         <div className="space-y-1">
@@ -105,7 +105,7 @@ export function ComunicadoDetailSlideOver({ isOpen, onClose, comunicado }: Comun
                     <div className="border-t border-gray-100 pt-4 space-y-1">
                         <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Registrado Por</span>
                         <p className="text-gray-700 text-xs">
-                            {comunicado.empleadoRegistro?.nombre || "Dr. Martínez Reyes (Coordinador)"}
+                            {comunicado.empleadoRegistroNombre || 'Usuario desconocido'}
                         </p>
                     </div>
 
