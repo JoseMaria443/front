@@ -511,16 +511,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
             <EvidenceSlideOver
                 isOpen={isEvidenceOpen}
                 onClose={() => setIsEvidenceOpen(false)}
-                task={activeTaskForEvidence ? {
-                    id: activeTaskForEvidence.task.idTarea,
-                    code: activeTaskForEvidence.task.resumenActividad,
-                    taskCode: activeTaskForEvidence.task.idTarea.slice(0, 5),
-                    title: activeTaskForEvidence.task.resumenActividad,
-                    urgency: "Urgente",
-                    urgencyType: "danger",
-                    date: new Date(activeTaskForEvidence.task.fechaEntrega).toLocaleDateString(),
-                    avatars: []
-                } : null}
+                task={activeTaskForEvidence ? activeTaskForEvidence.task : null}
                 onSuccess={handleEvidenceSuccess}
             />
 

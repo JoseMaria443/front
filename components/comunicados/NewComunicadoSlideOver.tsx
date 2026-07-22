@@ -16,7 +16,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
     const [folio, setFolio] = useState("");
     const [numComunicado, setNumComunicado] = useState("");
     const [tema, setTema] = useState("");
-    const [idArea, setIdArea] = useState("");
+    const [emisorNombre, setEmisorNombre] = useState("");
     const [fechaEmision, setFechaEmision] = useState("");
     const [idMedio, setIdMedio] = useState("");
     const [idTipo, setIdTipo] = useState("");
@@ -24,7 +24,6 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
     const [idRolDestinatario, setIdRolDestinatario] = useState("");
 
     // Catalog States
-    const [areasList, setAreasList] = useState<any[]>([]);
     const [tiposList, setTiposList] = useState<any[]>([]);
     const [mediosList, setMediosList] = useState<any[]>([]);
     const [empleadosList, setEmpleadosList] = useState<any[]>([]);
@@ -39,13 +38,11 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
         setIsLoadingOptions(true);
         setError("");
         Promise.all([
-            api.get<any[]>('/areas/todos'),
             api.get<any[]>('/tipos-comunicado/todos'),
             api.get<any[]>('/medios-recepcion/todos'),
             api.get<any[]>('/api/empleado/?activo=true'),
             api.get<any[]>('/roles-destinatario/todos')
-        ]).then(([areasRes, tiposRes, mediosRes, empsRes, rolesRes]) => {
-            setAreasList(areasRes.data.filter(x => !x.archivado));
+        ]).then(([tiposRes, mediosRes, empsRes, rolesRes]) => {
             setTiposList(tiposRes.data.filter(x => !x.archivado));
             setMediosList(mediosRes.data.filter(x => !x.archivado));
             setEmpleadosList(empsRes.data);
@@ -63,7 +60,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
     const isFormValid = 
         folio.trim() !== "" &&
         tema.trim() !== "" &&
-        idArea !== "" &&
+        emisorNombre.trim() !== "" &&
         fechaEmision !== "" &&
         idMedio !== "" &&
         idTipo !== "" &&
@@ -83,7 +80,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
             tema,
             fechaEmision: new Date(fechaEmision).toISOString(),
             fechaRecepcion: new Date().toISOString(),
-            idEmisor: idArea,
+            emisorNombre,
             idTipoComunicado: idTipo,
             idMedioRecepcion: idMedio,
             destinatarios: [
@@ -102,7 +99,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
             setFolio("");
             setNumComunicado("");
             setTema("");
-            setIdArea("");
+            setEmisorNombre("");
             setFechaEmision("");
             setIdMedio("");
             setIdTipo("");
@@ -197,22 +194,18 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
                         />
                     </div>
 
-                    {/* Área Emisora */}
+                    {/* Emisor (Interno/Externo) */}
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-700">
-                            Área Emisora <span className="text-red-500">*</span>
+                            Emisor (Interno/Externo) <span className="text-red-500">*</span>
                         </label>
-                        <select
-                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-corporate-accent h-11"
-                            value={idArea}
-                            onChange={(e) => setIdArea(e.target.value)}
+                        <Input
+                            placeholder="Ej. Rectoría, Auditoría Externa, etc."
+                            className="h-11 bg-white"
+                            value={emisorNombre}
+                            onChange={(e) => setEmisorNombre(e.target.value)}
                             required
-                        >
-                            <option value="">Selecciona el área...</option>
-                            {areasList.map(a => (
-                                <option key={a.id} value={a.id}>{a.nombre}</option>
-                            ))}
-                        </select>
+                        />
                     </div>
 
                     {/* Fecha de Emisión */}

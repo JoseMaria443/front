@@ -71,7 +71,8 @@ export const ComunicadoSchema = z.object({
     fechaRecepcion: z.string().datetime(),
     fechaRegistro: z.string().datetime().optional(),
 
-    idEmisor: z.string().uuid(),
+    idEmisor: z.string().uuid().optional(),
+    emisorNombre: z.string().optional(),
     idTipoComunicado: z.string().uuid(),
     idMedioRecepcion: z.string().uuid(),
     idEmpleadoRegistro: z.string().uuid(),

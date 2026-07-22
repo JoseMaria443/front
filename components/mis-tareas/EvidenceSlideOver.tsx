@@ -6,21 +6,10 @@ import { X, Maximize2, Minimize2, UploadCloud, Info, Plus, Trash2 } from "lucide
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 
-export interface MockTask {
-    id: number | string;
-    code: string;
-    taskCode: string;
-    title: string;
-    urgency: string;
-    urgencyType: string;
-    date: string;
-    avatars: string[];
-}
-
 interface EvidenceSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
-    task: MockTask | null; // manejo de tipado, falta conectar con zod
+    task: any; // Can accept Tarea or MockTask for backward compatibility
     onSuccess?: (evs: { doi: string; descripcion: string; urlArchivo: string; nombreOriginal: string; fechaRegistro: string }[]) => void;
 }
 
@@ -67,6 +56,16 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
 
     if (!isOpen) return null;
 
+    // Adapt fields dynamically for Tarea (API) vs MockTask
+    const titleToShow = task?.resumenActividad || task?.title || "Detalle de Tarea";
+    const descriptionToShow = task?.descripcion || "Sin descripción disponible.";
+    const limitDateToShow = task?.fechaEntrega 
+        ? new Date(task.fechaEntrega).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
+        : (task?.date || "N/A");
+    const statusToShow = task?.estado?.nombre || task?.status || "Asignada";
+    const codeToShow = task?.idTarea ? task.idTarea.slice(0, 8) : (task?.code || "N/A");
+    const taskCodeToShow = task?.idTarea ? task.idTarea.slice(0, 5).toUpperCase() : (task?.taskCode || "N/A");
+
     return (
         <>
             <div className="fixed inset-0 z-50 flex justify-end">
@@ -76,14 +75,15 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                 />
 
                 <div
-                    className={`relative bg-white shadow-2xl transition-all duration-300 ease-in-out flex flex-col h-full ${isExpanded ? "w-full" : "w-full md:w-[500px]"
-                        }`}
+                    className={`relative bg-white shadow-2xl transition-all duration-300 ease-in-out flex flex-col h-full ${
+                        isExpanded ? "w-full" : "w-full md:w-[500px]"
+                    }`}
                 >
                     <div className="flex items-start justify-between border-b border-gray-100 p-6">
                         <div>
                             <h2 className="text-xl font-bold text-corporate-dark">Subir Evidencia</h2>
                             <p className="text-sm text-gray-500 mt-1">
-                                {task?.code} · {task?.taskCode} — {task?.title}
+                                {codeToShow} · {taskCodeToShow} — {titleToShow}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -103,8 +103,7 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-                        {/* tarjeta de vinculacion de tarea, agregar evento cuando se tenga*/}
+                        {/* tarjeta de vinculación de tarea */}
                         <div
                             onClick={() => setIsTaskDetailOpen(true)}
                             className="relative bg-gray-50 border border-gray-100 rounded-xl p-4 cursor-pointer hover:bg-gray-100 transition-colors duration-200 group"
@@ -113,10 +112,10 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                                 <Info className="h-4 w-4" />
                             </div>
                             <p className="text-xs font-medium text-gray-500 mb-1">Tarea vinculada</p>
-                            <p className="font-semibold text-corporate-dark text-sm mb-2 pr-6">{task?.title}</p>
+                            <p className="font-semibold text-corporate-dark text-sm mb-2 pr-6">{titleToShow}</p>
                             <div className="flex items-center gap-3 text-xs">
-                                <span className="text-corporate-accent font-medium">{task?.code}</span>
-                                <span className="text-corporate-blue bg-blue-50 px-2 py-0.5 rounded-full">Asignada</span>
+                                <span className="text-corporate-accent font-medium">{codeToShow}</span>
+                                <span className="text-corporate-blue bg-blue-50 px-2 py-0.5 rounded-full">{statusToShow}</span>
                             </div>
                         </div>
 
@@ -164,7 +163,7 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                                         </label>
                                         <textarea
                                             className="w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-corporate-accent resize-none h-32"
-                                            placeholder="Describe la actividad documentada: qué ocurrió, cuándo, quiénes participaron y qué resultado refleja..."
+                                            placeholder="Describe la actividad documentada..."
                                             value={ev.description}
                                             onChange={(e) => updateEvidence(ev.id, { description: e.target.value.slice(0, 500) })}
                                         />
@@ -198,7 +197,7 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                                             </div>
                                         ) : (
                                             <div
-                                                onClick={() => updateEvidence(ev.id, { fileName: `evidencia_${task?.code || 'COM'}_${index + 1}.pdf` })}
+                                                onClick={() => updateEvidence(ev.id, { fileName: `evidencia_${codeToShow || 'COM'}_${index + 1}.pdf` })}
                                                 className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer group/upload"
                                             >
                                                 <UploadCloud className="h-8 w-8 text-corporate-blue mb-3 group-hover/upload:scale-110 transition-transform" />
@@ -219,7 +218,6 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                             <Plus className="h-4 w-4" />
                             Agregar otra evidencia para esta tarea
                         </button>
-
                     </div>
 
                     <div className="border-t border-gray-100 p-6 bg-white">
@@ -231,13 +229,13 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                                             evidences.map((e) => ({
                                                 doi: e.doi,
                                                 descripcion: e.description,
-                                                urlArchivo: "https://example.com/files/" + (e.fileName || "evidencia.pdf"),
+                                                urlArchivo: "https://simulacion-cloudinary.com/evidencia.pdf",
                                                 nombreOriginal: e.fileName || "evidencia.pdf",
                                                 fechaRegistro: new Date().toISOString()
                                             }))
                                         );
                                     } else {
-                                        alert(`¡Éxito! Se han registrado ${evidences.length} evidencias para la tarea: ${task?.title}`);
+                                        alert(`¡Éxito! Se han registrado ${evidences.length} evidencias.`);
                                     }
                                     onClose();
                                 }}
@@ -270,7 +268,7 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                                     Detalle de Tarea
                                 </span>
                                 <h3 className="text-lg font-bold text-corporate-dark mt-2">
-                                    {task?.title || "Detalle de la Tarea"}
+                                    {titleToShow}
                                 </h3>
                             </div>
                             <button
@@ -282,52 +280,42 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                         </div>
 
                         <div className="p-5 space-y-4 text-sm">
-                            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3.5 rounded-xl border border-gray-100/50">
-                                <div>
-                                    <span className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Código</span>
-                                    <span className="font-bold text-corporate-dark">{task?.code || "N/A"}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider">ID Interno</span>
-                                    <span className="font-medium text-gray-600">{task?.taskCode || "N/A"}</span>
-                                </div>
-                            </div>
-
                             <div className="space-y-1">
-                                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Descripción del Contexto</span>
-                                <p className="text-gray-600 leading-relaxed text-xs">
-                                    Esta tarea corresponde a la revisión e integración del módulo de evidencias en el sistema de gestión de calidad. Se debe validar que los campos cumplan con la estructura de auditoría y que los adjuntos se guarden correctamente.
+                                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Descripción</span>
+                                <p className="text-gray-600 leading-relaxed text-xs bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    {descriptionToShow}
                                 </p>
-                            </div>
-
-                            <div className="border-t border-gray-100 pt-3.5 grid grid-cols-2 gap-4">
-                                <div>
-                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Asignado Por</span>
-                                    <span className="text-corporate-dark font-medium text-xs">Ing. Carlos Mendoza (Auditor)</span>
-                                </div>
-                                <div>
-                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fecha Creación</span>
-                                    <span className="text-gray-600 text-xs">08 de Julio, 2026</span>
-                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 pt-1">
                                 <div>
-                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Urgencia</span>
-                                    <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full mt-0.5 ${task?.urgencyType === 'alta'
-                                            ? 'bg-red-50 text-red-600'
-                                            : task?.urgencyType === 'media'
-                                                ? 'bg-amber-50 text-amber-600'
-                                                : 'bg-green-50 text-green-600'
-                                        }`}>
-                                        {task?.urgency || "Media"}
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fecha Límite</span>
+                                    <span className="text-gray-600 text-xs font-medium block mt-1">
+                                        {limitDateToShow}
                                     </span>
                                 </div>
                                 <div>
-                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado Actual</span>
-                                    <span className="inline-flex items-center text-xs font-semibold text-corporate-blue bg-blue-50 px-2 py-0.5 rounded-full mt-0.5">
-                                        Asignada
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado</span>
+                                    <span className="inline-flex items-center text-xs font-semibold text-corporate-blue bg-blue-50 px-2 py-0.5 rounded-full mt-1">
+                                        {statusToShow}
                                     </span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 border-t border-gray-100 pt-3.5">
+                                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Responsables</span>
+                                <div className="space-y-2 mt-1">
+                                    {task?.responsables?.map((r: any, i: number) => (
+                                        <div key={i} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                            <div>
+                                                <p className="text-xs font-bold text-corporate-dark">{r.responsable?.nombre || "Responsable"}</p>
+                                                <p className="text-[10px] text-gray-400">{r.responsable?.email || ""}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(!task?.responsables || task?.responsables.length === 0) && (
+                                        <p className="text-xs text-gray-400 italic">Sin responsables asignados</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -345,4 +333,4 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
             )}
         </>
     );
-}
+}
