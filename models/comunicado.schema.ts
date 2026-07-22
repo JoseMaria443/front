@@ -42,6 +42,7 @@ export const TareaSchema = z.object({
     estado: EstadoTareaSchema.optional(),
     responsables: z.array(TareaResponsableSchema).optional(),
     evidencias: z.array(ArchivoEvidenciaSchema).optional(),
+    colaboradores: z.array(EmpleadoSchema).optional(),
 });
 export type Tarea = z.infer<typeof TareaSchema>;
 

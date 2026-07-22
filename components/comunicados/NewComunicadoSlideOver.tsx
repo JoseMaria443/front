@@ -1,20 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { X, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
-import { useDataStore } from "../../store/data.store";
-import type { Comunicado } from "../../models/comunicado.schema";
+import { api } from "../../services/api.config";
 
 interface NewComunicadoSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
+    onSuccess?: () => void;
 }
 
-export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOverProps) {
-    const { areas, tiposComunicado, mediosRecepcion, agregarComunicado, empleados } = useDataStore();
-
+export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComunicadoSlideOverProps) {
     const [folio, setFolio] = useState("");
     const [numComunicado, setNumComunicado] = useState("");
     const [tema, setTema] = useState("");
@@ -22,12 +20,45 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
     const [fechaEmision, setFechaEmision] = useState("");
     const [idMedio, setIdMedio] = useState("");
     const [idTipo, setIdTipo] = useState("");
+    const [idDestinatario, setIdDestinatario] = useState("");
+    const [idRolDestinatario, setIdRolDestinatario] = useState("");
+
+    // Catalog States
+    const [areasList, setAreasList] = useState<any[]>([]);
+    const [tiposList, setTiposList] = useState<any[]>([]);
+    const [mediosList, setMediosList] = useState<any[]>([]);
+    const [empleadosList, setEmpleadosList] = useState<any[]>([]);
+    const [rolesDestList, setRolesDestList] = useState<any[]>([]);
+    
+    const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (!isOpen) return;
+        setIsLoadingOptions(true);
+        setError("");
+        Promise.all([
+            api.get<any[]>('/areas/todos'),
+            api.get<any[]>('/tipos-comunicado/todos'),
+            api.get<any[]>('/medios-recepcion/todos'),
+            api.get<any[]>('/api/empleado/?activo=true'),
+            api.get<any[]>('/roles-destinatario/todos')
+        ]).then(([areasRes, tiposRes, mediosRes, empsRes, rolesRes]) => {
+            setAreasList(areasRes.data.filter(x => !x.archivado));
+            setTiposList(tiposRes.data.filter(x => !x.archivado));
+            setMediosList(mediosRes.data.filter(x => !x.archivado));
+            setEmpleadosList(empsRes.data);
+            setRolesDestList(rolesRes.data.filter(x => !x.archivado));
+        }).catch(err => {
+            console.error("Error loading dropdown data:", err);
+            setError("Error al cargar los catálogos para el formulario.");
+        }).finally(() => {
+            setIsLoadingOptions(false);
+        });
+    }, [isOpen]);
 
     if (!isOpen) return null;
-
-    const areaSeleccionada = areas.find(a => a.idArea === idArea);
-    const medioSeleccionado = mediosRecepcion.find(m => m.idMedioRecepcion === idMedio);
-    const tipoSeleccionado = tiposComunicado.find(t => t.idTipoComunicado === idTipo);
 
     const isFormValid = 
         folio.trim() !== "" &&
@@ -35,63 +66,67 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
         idArea !== "" &&
         fechaEmision !== "" &&
         idMedio !== "" &&
-        idTipo !== "";
+        idTipo !== "" &&
+        idDestinatario !== "" &&
+        idRolDestinatario !== "";
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isFormValid) return;
+        if (!isFormValid || isSubmitting) return;
 
-        const nuevoComunicado: Comunicado = {
-            idComunicado: Math.random().toString(),
+        setIsSubmitting(true);
+        setError("");
+        
+        const payload = {
             folioDoi: folio,
             numComunicado: numComunicado || `NUM-${folio}`,
             tema,
             fechaEmision: new Date(fechaEmision).toISOString(),
             fechaRecepcion: new Date().toISOString(),
-            idEmisor: idArea, // area emisor id mapped to idEmisor
+            idEmisor: idArea,
             idTipoComunicado: idTipo,
             idMedioRecepcion: idMedio,
-            idEmpleadoRegistro: "11111111-1111-1111-1111-111111111111", // Dr. Martinez
-            emisor: {
-                idEmpleado: idArea,
-                nombre: areaSeleccionada?.nombre || "Área Desconocida",
-                email: "contacto@universidad.edu.mx",
-                idArea,
-                activo: true
-            },
-            tipoComunicado: tipoSeleccionado ? { idTipoComunicado: idTipo, nombre: tipoSeleccionado.nombre } : undefined,
-            medioRecepcion: medioSeleccionado ? { idMedioRecepcion: idMedio, nombre: medioSeleccionado.nombre } : undefined,
-            tareas: [],
-            archivos: [
+            destinatarios: [
                 {
-                    idArchivo: Math.random().toString(),
-                    urlArchivo: `https://universidad.edu.mx/files/${folio.toLowerCase().replace(/\s+/g, '_')}_archivo.pdf`,
-                    nombreOriginal: `${folio.toLowerCase().replace(/\s+/g, '_')}_archivo.pdf`
+                    idDestinatario,
+                    idRolDestinatario
                 }
-            ]
+            ],
+            archivoUrl: "https://simulacion-cloudinary.com/documento_adjunto.pdf"
         };
 
-        agregarComunicado(nuevoComunicado);
-        onClose();
-        // Reset states
-        setFolio("");
-        setNumComunicado("");
-        setTema("");
-        setIdArea("");
-        setFechaEmision("");
-        setIdMedio("");
-        setIdTipo("");
+        try {
+            await api.post('/comunicados/', payload);
+            
+            // Clean inputs
+            setFolio("");
+            setNumComunicado("");
+            setTema("");
+            setIdArea("");
+            setFechaEmision("");
+            setIdMedio("");
+            setIdTipo("");
+            setIdDestinatario("");
+            setIdRolDestinatario("");
+            
+            if (onSuccess) {
+                onSuccess();
+            }
+        } catch (err: any) {
+            const msg = err.response?.data?.message || err.response?.data?.detail || "Error al registrar el comunicado.";
+            setError(msg);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end">
-            {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             />
 
-            {/* SlideOver Panel (1/4 width style, md:w-[450px]) */}
             <form onSubmit={handleSubmit} className="relative bg-white shadow-2xl transition-all duration-300 ease-in-out flex flex-col h-full w-full md:w-[450px]">
                 {/* Header */}
                 <div className="flex items-start justify-between border-b border-gray-100 p-6">
@@ -110,6 +145,17 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 text-sm">
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-xs font-semibold">
+                            {error}
+                        </div>
+                    )}
+                    {isLoadingOptions && (
+                        <div className="text-center py-4 text-xs text-gray-500">
+                            Cargando catálogos del sistema...
+                        </div>
+                    )}
+
                     {/* Folio */}
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-700">
@@ -163,8 +209,8 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
                             required
                         >
                             <option value="">Selecciona el área...</option>
-                            {areas.map(a => (
-                                <option key={a.idArea} value={a.idArea}>{a.nombre}</option>
+                            {areasList.map(a => (
+                                <option key={a.id} value={a.id}>{a.nombre}</option>
                             ))}
                         </select>
                     </div>
@@ -174,15 +220,13 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
                         <label className="text-xs font-bold text-gray-700">
                             Fecha de Emisión <span className="text-red-500">*</span>
                         </label>
-                        <div className="relative">
-                            <Input
-                                type="datetime-local"
-                                className="h-11 bg-white pr-10"
-                                value={fechaEmision}
-                                onChange={(e) => setFechaEmision(e.target.value)}
-                                required
-                            />
-                        </div>
+                        <Input
+                            type="datetime-local"
+                            className="h-11 bg-white"
+                            value={fechaEmision}
+                            onChange={(e) => setFechaEmision(e.target.value)}
+                            required
+                        />
                     </div>
 
                     {/* Medio de Recepción */}
@@ -197,8 +241,8 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
                             required
                         >
                             <option value="">Selecciona el medio...</option>
-                            {mediosRecepcion.map(m => (
-                                <option key={m.idMedioRecepcion} value={m.idMedioRecepcion}>{m.nombre}</option>
+                            {mediosList.map(m => (
+                                <option key={m.id} value={m.id}>{m.nombre}</option>
                             ))}
                         </select>
                     </div>
@@ -215,10 +259,58 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
                             required
                         >
                             <option value="">Selecciona el tipo...</option>
-                            {tiposComunicado.map(t => (
-                                <option key={t.idTipoComunicado} value={t.idTipoComunicado}>{t.nombre}</option>
+                            {tiposList.map(t => (
+                                <option key={t.id} value={t.id}>{t.nombre}</option>
                             ))}
                         </select>
+                    </div>
+
+                    {/* Destinatario */}
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-700">
+                            Destinatario <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-corporate-accent h-11"
+                            value={idDestinatario}
+                            onChange={(e) => setIdDestinatario(e.target.value)}
+                            required
+                        >
+                            <option value="">Selecciona el empleado destinatario...</option>
+                            {empleadosList.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.nombre}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Rol de Destinatario */}
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-700">
+                            Rol de Destinatario <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-corporate-accent h-11"
+                            value={idRolDestinatario}
+                            onChange={(e) => setIdRolDestinatario(e.target.value)}
+                            required
+                        >
+                            <option value="">Selecciona el rol de destinatario...</option>
+                            {rolesDestList.map(r => (
+                                <option key={r.id} value={r.id}>{r.descripcion_rol}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Archivo Adjunto */}
+                    <div className="space-y-1 pt-2">
+                        <label className="text-xs font-bold text-gray-700">
+                            Documento Adjunto (PDF)
+                        </label>
+                        <input
+                            type="file"
+                            accept=".pdf"
+                            className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-corporate-blue hover:file:bg-blue-100"
+                        />
                     </div>
                 </div>
 
@@ -233,14 +325,14 @@ export function NewComunicadoSlideOver({ isOpen, onClose }: NewComunicadoSlideOv
                     </Button>
                     <Button
                         type="submit"
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || isSubmitting}
                         className={`w-1/2 py-5 text-sm rounded-xl font-semibold transition-all duration-200 ${
-                            isFormValid 
+                            isFormValid && !isSubmitting
                                 ? "bg-corporate-accent hover:bg-corporate-blue text-white cursor-pointer" 
                                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
                         }`}
                     >
-                        Registrar
+                        {isSubmitting ? "Registrando..." : "Registrar"}
                     </Button>
                 </div>
             </form>

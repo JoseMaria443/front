@@ -1,27 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
-import { useDataStore } from "../../store/data.store";
-import type { Tarea } from "../../models/comunicado.schema";
+import { api } from "../../services/api.config";
 
 interface NewTaskSlideOverProps {
     isOpen: boolean;
     onClose: () => void;
     idComunicado: string | null;
+    onSuccess?: () => void;
 }
 
-export function NewTaskSlideOver({ isOpen, onClose, idComunicado }: NewTaskSlideOverProps) {
-    const { empleados, estadosTarea, agregarTareaAComunicado } = useDataStore();
-
+export function NewTaskSlideOver({ isOpen, onClose, idComunicado, onSuccess }: NewTaskSlideOverProps) {
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
     const [fechaEntrega, setFechaEntrega] = useState("");
-    const [idEstado, setIdEstado] = useState("est1"); // Default to "Pendiente" (est1)
     const [responsablesSeleccionados, setResponsablesSeleccionados] = useState<string[]>([]);
     const [colaboradoresSeleccionados, setColaboradoresSeleccionados] = useState<string[]>([]);
+
+    // Employees list from API
+    const [empleadosList, setEmpleadosList] = useState<any[]>([]);
+    const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (!isOpen) return;
+        setIsLoadingEmployees(true);
+        setError("");
+        api.get<any[]>('/api/empleado/?activo=true')
+            .then(res => {
+                setEmpleadosList(res.data);
+            })
+            .catch(err => {
+                console.error("Error loading employees:", err);
+                setError("Error al cargar la lista de empleados.");
+            })
+            .finally(() => {
+                setIsLoadingEmployees(false);
+            });
+    }, [isOpen]);
 
     if (!isOpen || !idComunicado) return null;
 
@@ -36,7 +56,6 @@ export function NewTaskSlideOver({ isOpen, onClose, idComunicado }: NewTaskSlide
             setResponsablesSeleccionados(responsablesSeleccionados.filter(r => r !== id));
         } else {
             setResponsablesSeleccionados([...responsablesSeleccionados, id]);
-            // Remove from collaborators if selected as responsible
             setColaboradoresSeleccionados(colaboradoresSeleccionados.filter(c => c !== id));
         }
     };
@@ -46,67 +65,54 @@ export function NewTaskSlideOver({ isOpen, onClose, idComunicado }: NewTaskSlide
             setColaboradoresSeleccionados(colaboradoresSeleccionados.filter(c => c !== id));
         } else {
             setColaboradoresSeleccionados([...colaboradoresSeleccionados, id]);
-            // Remove from responsables if selected as collaborator
             setResponsablesSeleccionados(responsablesSeleccionados.filter(r => r !== id));
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isFormValid) return;
+        if (!isFormValid || isSubmitting) return;
 
-        const estadoSeleccionado = estadosTarea.find(est => est.idEstadoTarea === idEstado);
+        setIsSubmitting(true);
+        setError("");
 
-        const nuevaTarea: Tarea = {
-            idTarea: Math.random().toString(),
-            idComunicado: idComunicado,
-            idEstadoTarea: idEstado,
+        const payload = {
+            idComunicado,
             resumenActividad: titulo,
             descripcion,
             fechaEntrega: new Date(fechaEntrega).toISOString(),
-            fechaRegistro: new Date().toISOString(),
-            estado: estadoSeleccionado ? { idEstadoTarea: idEstado, nombre: estadoSeleccionado.nombre } : undefined,
-            responsables: responsablesSeleccionados.map(id => {
-                const emp = empleados.find(e => e.idEmpleado === id);
-                return {
-                    idResponsable: id,
-                    idRolResponsable: "r1", // Responsable
-                    responsable: emp
-                };
-            }),
-            // Since collaborator is not part of the backend schema array, we can encode collaborators
-            // in description or just keep them locally in the mock. For display in front-end, let's map them
-            // inside description or store them as a mock field if we want (e.g. as custom properties on the mock object).
-            // Zod schema doesn't throw if we add extra fields in mock state:
-            // Let's add collaborators:
-            // @ts-ignore
-            colaboradores: colaboradoresSeleccionados.map(id => {
-                const emp = empleados.find(e => e.idEmpleado === id);
-                return emp;
-            }),
-            evidencias: []
+            responsables: responsablesSeleccionados,
+            colaboradores: colaboradoresSeleccionados
         };
 
-        agregarTareaAComunicado(idComunicado, nuevaTarea);
-        onClose();
-        // Reset states
-        setTitulo("");
-        setDescripcion("");
-        setFechaEntrega("");
-        setIdEstado("est1");
-        setResponsablesSeleccionados([]);
-        setColaboradoresSeleccionados([]);
+        try {
+            await api.post('/tareas/', payload);
+
+            // Clean inputs
+            setTitulo("");
+            setDescripcion("");
+            setFechaEntrega("");
+            setResponsablesSeleccionados([]);
+            setColaboradoresSeleccionados([]);
+
+            if (onSuccess) {
+                onSuccess();
+            }
+        } catch (err: any) {
+            const msg = err.response?.data?.message || err.response?.data?.detail || "Error al agregar la tarea.";
+            setError(msg);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end">
-            {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             />
 
-            {/* SlideOver Panel (1/4 width style, md:w-[450px]) */}
             <form onSubmit={handleSubmit} className="relative bg-white shadow-2xl transition-all duration-300 ease-in-out flex flex-col h-full w-full md:w-[450px]">
                 {/* Header */}
                 <div className="flex items-start justify-between border-b border-gray-100 p-6">
@@ -125,6 +131,17 @@ export function NewTaskSlideOver({ isOpen, onClose, idComunicado }: NewTaskSlide
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 text-sm">
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-xs font-semibold">
+                            {error}
+                        </div>
+                    )}
+                    {isLoadingEmployees && (
+                        <div className="text-center py-2 text-xs text-gray-500">
+                            Cargando empleados del sistema...
+                        </div>
+                    )}
+
                     {/* Título de la Tarea */}
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-700">
@@ -173,30 +190,27 @@ export function NewTaskSlideOver({ isOpen, onClose, idComunicado }: NewTaskSlide
                             Estado Inicial <span className="text-red-500">*</span>
                         </label>
                         <select
-                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-corporate-accent h-11"
-                            value={idEstado}
-                            onChange={(e) => setIdEstado(e.target.value)}
-                            required
+                            className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-corporate-accent h-11 cursor-not-allowed text-gray-500"
+                            value="asignada"
+                            disabled
                         >
-                            {estadosTarea.map(est => (
-                                <option key={est.idEstadoTarea} value={est.idEstadoTarea}>{est.nombre}</option>
-                            ))}
+                            <option value="asignada">Asignada</option>
                         </select>
                     </div>
 
-                    {/* Responsables (Selección Múltiple) */}
+                    {/* Responsables */}
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-gray-700 block">
                             Responsables <span className="text-red-500">* (Mínimo 1)</span>
                         </label>
                         <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 max-h-40 overflow-y-auto">
-                            {empleados.map(emp => {
-                                const selected = responsablesSeleccionados.includes(emp.idEmpleado);
+                            {empleadosList.map(emp => {
+                                const selected = responsablesSeleccionados.includes(emp.id);
                                 return (
                                     <button
                                         type="button"
-                                        key={emp.idEmpleado}
-                                        onClick={() => handleToggleResponsable(emp.idEmpleado)}
+                                        key={emp.id}
+                                        onClick={() => handleToggleResponsable(emp.id)}
                                         className={`flex items-center gap-2 p-2 rounded-lg border text-left transition-all ${
                                             selected
                                                 ? "bg-blue-50 border-corporate-accent text-corporate-blue font-semibold"
@@ -215,20 +229,20 @@ export function NewTaskSlideOver({ isOpen, onClose, idComunicado }: NewTaskSlide
                         </div>
                     </div>
 
-                    {/* Colaboradores (Selección Múltiple) */}
+                    {/* Colaboradores */}
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-gray-700 block">
                             Colaboradores (Opcional)
                         </label>
                         <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 max-h-40 overflow-y-auto">
-                            {empleados.map(emp => {
-                                const selected = colaboradoresSeleccionados.includes(emp.idEmpleado);
-                                const isResp = responsablesSeleccionados.includes(emp.idEmpleado);
+                            {empleadosList.map(emp => {
+                                const selected = colaboradoresSeleccionados.includes(emp.id);
+                                const isResp = responsablesSeleccionados.includes(emp.id);
                                 return (
                                     <button
                                         type="button"
-                                        key={emp.idEmpleado}
-                                        onClick={() => handleToggleColaborador(emp.idEmpleado)}
+                                        key={emp.id}
+                                        onClick={() => handleToggleColaborador(emp.id)}
                                         disabled={isResp}
                                         className={`flex items-center gap-2 p-2 rounded-lg border text-left transition-all ${
                                             selected
@@ -262,14 +276,14 @@ export function NewTaskSlideOver({ isOpen, onClose, idComunicado }: NewTaskSlide
                     </Button>
                     <Button
                         type="submit"
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || isSubmitting}
                         className={`w-1/2 py-5 text-sm rounded-xl font-semibold transition-all duration-200 ${
-                            isFormValid
+                            isFormValid && !isSubmitting
                                 ? "bg-corporate-accent hover:bg-corporate-blue text-white cursor-pointer"
                                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
                         }`}
                     >
-                        Agregar
+                        {isSubmitting ? "Agregando..." : "Agregar"}
                     </Button>
                 </div>
             </form>
