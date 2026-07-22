@@ -22,7 +22,8 @@ interface EvidenciaDetailSlideOverProps {
 
 const formatRegistroDate = (dateStr?: string | Date) => {
     if (!dateStr) return "Fecha de registro no disponible";
-    const d = new Date(dateStr);
+    const cleanStr = typeof dateStr === "string" ? dateStr.trim() : dateStr;
+    const d = new Date(cleanStr);
     if (isNaN(d.getTime()) || d.getTime() <= 0) {
         return "Fecha de registro no disponible";
     }
@@ -36,6 +37,8 @@ const formatRegistroDate = (dateStr?: string | Date) => {
 };
 
 export function EvidenciaDetailSlideOver({ isOpen, onClose, evidencia }: EvidenciaDetailSlideOverProps) {
+    console.log("Datos de Evidencia en SlideOver:", evidencia);
+
     if (!isOpen || !evidencia) return null;
 
     return (
