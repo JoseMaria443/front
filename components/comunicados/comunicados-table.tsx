@@ -43,6 +43,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
 
     // States for row expansion
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+    const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({});
     
     const [selectedComunicado, setSelectedComunicado] = useState<Comunicado | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -233,6 +234,14 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
         }));
     };
 
+    const toggleTaskEvidences = (taskId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setExpandedTasks(prev => ({
+            ...prev,
+            [taskId]: !prev[taskId]
+        }));
+    };
+
     const handleRowClick = (comunicado: Comunicado) => {
         setSelectedComunicado(comunicado);
         setIsDetailOpen(true);
@@ -378,12 +387,30 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                         </p>
                                                                     </div>
                                                                     <div className="flex items-center gap-3">
+                                                                        {task.evidencias && task.evidencias.length > 0 && (
+                                                                            <button
+                                                                                onClick={(e) => toggleTaskEvidences(task.idTarea, e)}
+                                                                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-corporate-accent bg-slate-50 hover:bg-blue-50/50 p-1.5 rounded-lg transition-colors border border-slate-200 shadow-sm cursor-pointer"
+                                                                            >
+                                                                                {expandedTasks[task.idTarea] ? (
+                                                                                    <>
+                                                                                        <ChevronDown className="h-3.5 w-3.5 text-corporate-accent" />
+                                                                                        <span>Ocultar Evidencias ({task.evidencias.length})</span>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
+                                                                                        <span>Ver Evidencias ({task.evidencias.length})</span>
+                                                                                    </>
+                                                                                )}
+                                                                            </button>
+                                                                        )}
                                                                         <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${getEstadoBadge(task.estado?.nombre)}`}>
                                                                             {task.estado?.nombre || "Asignada"}
                                                                         </span>
                                                                         <button
                                                                             onClick={(e) => handleOpenEvidence(item.idComunicado, task, e)}
-                                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-corporate-accent hover:bg-blue-50/50 p-1.5 rounded-lg transition-colors border border-corporate-accent/20 cursor-pointer"
+                                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-corporate-accent hover:bg-blue-50/55 p-1.5 rounded-lg transition-colors border border-corporate-accent/20 cursor-pointer"
                                                                         >
                                                                             <UploadCloud className="h-3.5 w-3.5" />
                                                                             Subir Evidencia
@@ -440,9 +467,8 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                     return null;
                                                                 })()}
 
-                                                                {/* Evidencias (Nivel 3) */}
-                                                                {task.evidencias && task.evidencias.length > 0 && (
-                                                                    <div className="mt-3 bg-slate-100/90 rounded-xl p-3 border border-slate-200/80 space-y-2 block relative z-10">
+                                                                {task.evidencias && task.evidencias.length > 0 && expandedTasks[task.idTarea] && (
+                                                                    <div className="mt-3 bg-slate-100/90 rounded-xl p-3 border border-slate-200/80 space-y-2 block relative z-10" onClick={(e) => e.stopPropagation()}>
                                                                         <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                                                                             Evidencias Cargadas ({task.evidencias.length})
                                                                         </span>
