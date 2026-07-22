@@ -12,11 +12,11 @@ export const ArchivoEvidenciaSchema = z.object({
     idArchivoEvidencia: z.string().uuid(),
     doi: z.string(),
     descripcion: z.string(),
-    urlArchivo: z.string().url(),
+    urlArchivo: z.string(), // Cambiado a string para mayor tolerancia con URLs relativas o simuladas
     nombreOriginal: z.string(),
     idElaborador: z.string().uuid(),
-    fechaRegistro: z.string().datetime(),
-
+    fechaRegistro: z.string(), // Cambiado a string simple por tolerancia de formatos de fecha ISO
+    elaboradorNombre: z.string().optional(),
     elaborador: EmpleadoSchema.optional(),
 });
 export type ArchivoEvidencia = z.infer<typeof ArchivoEvidenciaSchema>;

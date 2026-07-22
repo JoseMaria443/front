@@ -11,6 +11,8 @@ interface EvidenciaDetailSlideOverProps {
         nombreOriginal: string;
         urlArchivo: string;
         fechaRegistro: string | Date;
+        elaboradorNombre?: string;
+        descripcion?: string;
         elaborador?: {
             nombre: string;
             email?: string;
@@ -95,7 +97,7 @@ export function EvidenciaDetailSlideOver({ isOpen, onClose, evidencia }: Evidenc
                             <div>
                                 <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Elaborado por</span>
                                 <p className="text-gray-700 text-xs font-bold mt-0.5">
-                                    {evidencia.elaborador?.nombre || "Usuario Desconocido"}
+                                    {evidencia.elaboradorNombre || evidencia.elaborador?.nombre || "Usuario Desconocido"}
                                 </p>
                                 {evidencia.elaborador?.email && (
                                     <p className="text-[10px] text-gray-400 mt-0.5">
@@ -104,6 +106,15 @@ export function EvidenciaDetailSlideOver({ isOpen, onClose, evidencia }: Evidenc
                                 )}
                             </div>
                         </div>
+
+                        {evidencia.descripcion && (
+                            <div className="space-y-1 border-t border-gray-100 pt-4">
+                                <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Descripción / Notas</span>
+                                <p className="text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed text-xs">
+                                    {evidencia.descripcion}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
 

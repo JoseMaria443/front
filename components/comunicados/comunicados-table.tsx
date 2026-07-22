@@ -160,6 +160,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                     nombreOriginal: ev.nombreOriginal,
                                     idElaborador: ev.idElaborador || ev.idUsuario,
                                     fechaRegistro: ev.fechaRegistro,
+                                    elaboradorNombre: ev.elaboradorNombre || emp?.nombre,
                                     elaborador: emp ? {
                                         idEmpleado: emp.id,
                                         nombre: emp.nombre,
