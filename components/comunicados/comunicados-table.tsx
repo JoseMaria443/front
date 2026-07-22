@@ -445,9 +445,9 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                             {task.evidencias.map((ev) => (
                                                                                 <div 
                                                                                     key={ev.idArchivoEvidencia} 
-                                                                                    className="bg-white border border-gray-100 rounded-lg p-2.5 flex items-center justify-between text-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+                                                                                    className="bg-white border border-gray-100 rounded-lg p-2.5 flex items-center justify-between text-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] gap-2 hover:bg-gray-50/55 transition-colors"
                                                                                 >
-                                                                                    <div className="space-y-0.5 truncate pr-2">
+                                                                                    <div className="space-y-0.5 truncate pr-2 flex-1">
                                                                                         <p className="font-bold text-corporate-dark truncate">
                                                                                             {ev.nombreOriginal}
                                                                                         </p>
@@ -455,12 +455,19 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                                             DOI: <span className="font-medium text-corporate-accent">{ev.doi}</span>
                                                                                         </p>
                                                                                         <p className="text-[9px] text-gray-500">
-                                                                                            Subido por: <span className="font-semibold">{ev.elaborador?.nombre || "Usuario Desconocido"}</span>
+                                                                                            Subido por: <span className="font-semibold">{ev.elaborador?.nombre || "Usuario Desconocido"}</span> · {new Date(ev.fechaRegistro).toLocaleDateString()}
                                                                                         </p>
                                                                                     </div>
-                                                                                    <span className="text-[9px] text-gray-400 font-medium whitespace-nowrap bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
-                                                                                        {new Date(ev.fechaRegistro).toLocaleDateString()}
-                                                                                    </span>
+                                                                                    <a
+                                                                                        href={ev.urlArchivo}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        onClick={(e) => e.stopPropagation()}
+                                                                                        className="inline-flex items-center justify-center p-1.5 rounded-md bg-slate-50 hover:bg-blue-50 border border-gray-100 text-corporate-accent transition-colors cursor-pointer"
+                                                                                        title="Ver archivo de evidencia"
+                                                                                    >
+                                                                                        <UploadCloud className="h-3.5 w-3.5" />
+                                                                                    </a>
                                                                                 </div>
                                                                             ))}
                                                                         </div>
