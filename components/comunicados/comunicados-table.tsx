@@ -7,6 +7,7 @@ import { NewTaskSlideOver } from "./NewTaskSlideOver";
 import { ComunicadoDetailSlideOver } from "./ComunicadoDetailSlideOver";
 import { EvidenceSlideOver } from "../mis-tareas/EvidenceSlideOver";
 import { TaskDetailSlideOver } from "./TaskDetailSlideOver";
+import { EvidenciaDetailSlideOver } from "./EvidenciaDetailSlideOver";
 import { api } from "../../services/api.config";
 
 const medioStyles: Record<string, string> = {
@@ -67,6 +68,9 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
     
     const [activeTaskForEvidence, setActiveTaskForEvidence] = useState<{ comunicadoId: string; task: Tarea } | null>(null);
     const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
+
+    const [selectedEvidenceForDetail, setSelectedEvidenceForDetail] = useState<any | null>(null);
+    const [isEvidenceDetailOpen, setIsEvidenceDetailOpen] = useState(false);
 
     const fetchComunicados = async () => {
         setIsLoading(true);
@@ -213,6 +217,12 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
         e.stopPropagation();
         setActiveTaskForEvidence({ comunicadoId, task });
         setIsEvidenceOpen(true);
+    };
+
+    const handleOpenEvidenceDetail = (ev: any, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSelectedEvidenceForDetail(ev);
+        setIsEvidenceDetailOpen(true);
     };
 
     const handleEvidenceSuccess = async (evs: any[]) => {
@@ -412,13 +422,11 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                         </span>
                                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                                             {task.evidencias.map((ev) => (
-                                                                                <a 
+                                                                                <button 
                                                                                     key={ev.idArchivoEvidencia} 
-                                                                                    href={ev.urlArchivo}
-                                                                                    target="_blank"
-                                                                                    rel="noopener noreferrer"
-                                                                                    onClick={(e) => e.stopPropagation()}
-                                                                                    className="bg-white border border-gray-100 rounded-lg p-2.5 flex items-center justify-between text-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] gap-2 hover:bg-blue-50/50 hover:border-blue-200 transition-colors cursor-pointer block"
+                                                                                    type="button"
+                                                                                    onClick={(e) => handleOpenEvidenceDetail(ev, e)}
+                                                                                    className="bg-white border border-gray-100 rounded-lg p-2.5 flex items-center justify-between text-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] gap-2 hover:bg-blue-50/50 hover:border-blue-200 transition-colors cursor-pointer text-left w-full"
                                                                                 >
                                                                                     <div className="space-y-0.5 truncate pr-2 flex-1">
                                                                                         <p className="font-bold text-corporate-dark truncate">
@@ -433,11 +441,11 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                                     </div>
                                                                                     <div
                                                                                         className="inline-flex items-center justify-center p-1.5 rounded-md bg-slate-50 border border-gray-100 text-corporate-accent transition-colors"
-                                                                                        title="Ver archivo de evidencia"
+                                                                                        title="Ver detalles de evidencia"
                                                                                     >
                                                                                         <UploadCloud className="h-3.5 w-3.5" />
                                                                                     </div>
-                                                                                </a>
+                                                                                </button>
                                                                             ))}
                                                                         </div>
                                                                     </div>
@@ -495,6 +503,12 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                 isOpen={isTaskDetailSlideOverOpen}
                 onClose={() => setIsTaskDetailSlideOverOpen(false)}
                 task={selectedTaskForDetail}
+            />
+
+            <EvidenciaDetailSlideOver
+                isOpen={isEvidenceDetailOpen}
+                onClose={() => setIsEvidenceDetailOpen(false)}
+                evidencia={selectedEvidenceForDetail}
             />
         </div>
     );
