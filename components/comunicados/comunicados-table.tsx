@@ -435,9 +435,14 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                     </div>
                                                                 </div>
 
+                                                                {(() => {
+                                                                    console.log("Evidencias de la tarea:", task.resumenActividad, task.evidencias);
+                                                                    return null;
+                                                                })()}
+
                                                                 {/* Evidencias (Nivel 3) */}
                                                                 {task.evidencias && task.evidencias.length > 0 && (
-                                                                    <div className="mt-3 bg-slate-50 rounded-xl p-3 border border-slate-100/50 space-y-2">
+                                                                    <div className="mt-3 bg-slate-100/90 rounded-xl p-3 border border-slate-200/80 space-y-2 block relative z-10">
                                                                         <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                                                                             Evidencias Cargadas ({task.evidencias.length})
                                                                         </span>
