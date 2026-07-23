@@ -1,7 +1,9 @@
 "use client";
 
-import { X, FileText, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, FileText, ExternalLink, Users } from "lucide-react";
 import type { Comunicado } from "../../models/comunicado.schema";
+import { api } from "../../services/api.config";
 
 interface ComunicadoDetailSlideOverProps {
     isOpen: boolean;
@@ -10,6 +12,49 @@ interface ComunicadoDetailSlideOverProps {
 }
 
 export function ComunicadoDetailSlideOver({ isOpen, onClose, comunicado }: ComunicadoDetailSlideOverProps) {
+    const [destinatarios, setDestinatarios] = useState<any[]>([]);
+    const [isLoadingDest, setIsLoadingDest] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen || !comunicado) return;
+        
+        const fetchDestAndRoles = async () => {
+            setIsLoadingDest(true);
+            try {
+                const [destRes, empsRes, rolesRes] = await Promise.all([
+                    api.get<any[]>(`/comunicados/${comunicado.idComunicado}/destinatarios`),
+                    api.get<any[]>('/api/empleado/?activo=true'),
+                    api.get<any[]>('/roles-destinatario/todos')
+                ]);
+                
+                const empsMap = new Map(empsRes.data.map(e => [e.id, e]));
+                const rolesMap = new Map(rolesRes.data.map(r => [r.id, r]));
+                
+                const mapped = destRes.data.map((d: any) => {
+                    const emp = empsMap.get(d.idDestinatario);
+                    const rol = rolesMap.get(d.idRolDestinatario);
+                    return {
+                        destinatario: emp ? {
+                            nombre: emp.nombre,
+                            email: emp.email
+                        } : undefined,
+                        rol: rol ? {
+                            descripcionRol: rol.descripcionRol
+                        } : undefined
+                    };
+                });
+                
+                setDestinatarios(mapped);
+            } catch (err) {
+                console.error("Error fetching destinatarios:", err);
+            } finally {
+                setIsLoadingDest(false);
+            }
+        };
+        
+        fetchDestAndRoles();
+    }, [isOpen, comunicado]);
+
     if (!isOpen || !comunicado) return null;
 
     return (
@@ -51,11 +96,14 @@ export function ComunicadoDetailSlideOver({ isOpen, onClose, comunicado }: Comun
                     </div>
 
                     {/* Emisor y Tipo */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4">
                         <div className="space-y-1">
-                            <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Área Emisora</span>
-                            <span className="block font-medium text-corporate-dark text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                                {comunicado.areaEmisoraNombre || 'Sin área asignada'}
+                            <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Emisor / Área</span>
+                            <span className="block font-medium text-corporate-dark text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed">
+                                {comunicado.emisorNombre || comunicado.emisor?.nombre || 'Sin emisor asignado'}{' '}
+                                {comunicado.areaEmisoraNombre && (
+                                    <span className="text-sm text-gray-500 font-normal">({comunicado.areaEmisoraNombre})</span>
+                                )}
                             </span>
                         </div>
                         <div className="space-y-1">
@@ -104,10 +152,39 @@ export function ComunicadoDetailSlideOver({ isOpen, onClose, comunicado }: Comun
 
                     <div className="border-t border-gray-100 pt-4 space-y-1">
                         <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Registrado Por</span>
-                        <p className="text-gray-700 text-xs">
+                        <p className="text-gray-700 text-xs font-medium">
                             {comunicado.empleadoRegistroNombre || 'Usuario desconocido'}
                         </p>
                     </div>
+
+                    {/* Destinatarios */}
+                    {destinatarios && destinatarios.length > 0 && (
+                        <div className="border-t border-gray-100 pt-4 space-y-2">
+                            <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                                <Users className="h-3.5 w-3.5 text-gray-400" />
+                                Destinatarios
+                            </span>
+                            <div className="space-y-2">
+                                {destinatarios.map((dest, i) => (
+                                    <div key={i} className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                                        <div>
+                                            <p className="font-bold text-corporate-dark">
+                                                {dest.destinatario?.nombre || "Destinatario"}
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                                {dest.destinatario?.email || ""}
+                                            </p>
+                                        </div>
+                                        {dest.rol?.descripcionRol && (
+                                            <span className="text-[9px] font-bold text-corporate-accent bg-blue-50 px-2 py-0.5 rounded border border-blue-100/50">
+                                                {dest.rol.descripcionRol}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="border-t border-gray-100 pt-4 space-y-2">
                         <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Archivos Adjuntos</span>
