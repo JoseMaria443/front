@@ -99,6 +99,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                     fechaRecepcion: c.fechaRecepcion,
                     fechaRegistro: c.fechaRegistro,
                     idEmisor: c.idEmisor,
+                    emisorNombre: c.emisorNombre || empsMap.get(c.idEmisor)?.nombre,
                     idTipoComunicado: c.idTipoComunicado,
                     idMedioRecepcion: c.idMedioRecepcion,
                     idEmpleadoRegistro: c.idEmpleadoRegistro,
@@ -257,7 +258,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                             <th className="w-12 py-4 pl-4 text-center"></th>
                             <th className="py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Folio / DOI</th>
                             <th className="py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Tema</th>
-                            <th className="py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Área Emisora</th>
+                            <th className="py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Emisor / Área</th>
                             <th className="py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Fecha Emisión</th>
                             <th className="py-4 pr-6 text-xs font-bold uppercase tracking-wider text-gray-400 text-right">Medio</th>
                         </tr>
@@ -299,9 +300,14 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                 <div className="col-span-1.5 pr-4 text-sm font-medium text-corporate-dark truncate max-w-[200px]">
                                                     {item.tema}
                                                 </div>
-                                                <div className="col-span-1 pr-4 text-sm text-gray-500 truncate">
-                                                    {item.areaEmisoraNombre || item.emisor?.nombre || "N/A"}
-                                                </div>
+                                                 <div className="col-span-1 pr-4 flex flex-col justify-center truncate">
+                                                     <span className="text-sm font-bold text-corporate-dark truncate">
+                                                         {item.emisorNombre || item.emisor?.nombre || "N/A"}
+                                                     </span>
+                                                     <span className="text-xs text-gray-400 truncate mt-0.5">
+                                                         {item.areaEmisoraNombre || "N/A"}
+                                                     </span>
+                                                 </div>
                                                 <div className="col-span-1 text-sm tabular-nums text-gray-500">
                                                     {new Date(item.fechaEmision).toLocaleDateString('es-MX', {
                                                         year: 'numeric', month: 'short', day: 'numeric'
