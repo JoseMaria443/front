@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { EvidenceSlideOver } from "../../../components/mis-tareas/EvidenceSlideOver";
 import { TaskDetailSlideOver } from "../../../components/comunicados/TaskDetailSlideOver";
 import { EvidenciaDetailSlideOver } from "../../../components/comunicados/EvidenciaDetailSlideOver";
@@ -257,71 +257,114 @@ export default function MisTareasPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {filteredTasks.map((t, idx) => (
-                                <tr 
-                                    key={t.id} 
-                                    onClick={() => handleRowClick(t)}
-                                    className={`${t.status === 'Pendiente' ? "bg-red-50/5" : "hover:bg-gray-50/50"} cursor-pointer transition-colors`}
-                                >
-                                    <td className="py-5 pl-6 pr-4">
-                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-                                            t.status === 'Completada' 
-                                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                                                : t.status === 'En Progreso' 
-                                                ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                : 'bg-red-50 text-red-600 border-red-100'
-                                        }`}>
-                                            {t.status === 'Completada' ? <CheckSquare className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                                            {t.urgency}
-                                        </span>
-                                    </td>
-                                    <td className="py-5 px-4">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-corporate-accent text-xs font-bold">{t.code}</span>
-                                            <span className="text-gray-300 text-xs">•</span>
-                                            <span className="text-corporate-accent text-xs font-bold">{t.taskCode}</span>
-                                        </div>
-                                        <p className="text-sm font-bold text-corporate-dark">{t.title}</p>
-                                    </td>
-                                    <td className="py-5 px-4">
-                                        <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                                            <Calendar className={`w-4 h-4 ${t.status === 'Pendiente' ? 'text-red-400' : 'text-gray-400'}`} />
-                                            <span className={t.status === 'Pendiente' ? 'text-red-500' : ''}>{t.date}</span>
-                                        </div>
-                                    </td>
-                                    <td className="py-5 px-4">
-                                        <div className="flex -space-x-2">
-                                            {t.avatars.map((initials: string, i: number) => (
-                                                <div
-                                                    key={i}
-                                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white ${
-                                                        initials === 'CG' ? 'bg-emerald-500' :
-                                                        initials === 'MR' ? 'bg-corporate-blue' :
-                                                        initials === 'AL' ? 'bg-violet-500' : 'bg-pink-500'
-                                                    }`}
-                                                >
-                                                    {initials}
+                                <Fragment key={t.id}>
+                                    <tr 
+                                        onClick={() => handleRowClick(t)}
+                                        className={`${t.status === 'Pendiente' ? "bg-red-50/5" : "hover:bg-gray-50/50"} cursor-pointer transition-colors`}
+                                    >
+                                        <td className="py-5 pl-6 pr-4">
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                                                t.status === 'Completada' 
+                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                                                    : t.status === 'En Progreso' 
+                                                    ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                    : 'bg-red-50 text-red-600 border-red-100'
+                                            }`}>
+                                                {t.status === 'Completada' ? <CheckSquare className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                                                {t.urgency}
+                                            </span>
+                                        </td>
+                                        <td className="py-5 px-4">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-corporate-accent text-xs font-bold">{t.code}</span>
+                                                <span className="text-gray-300 text-xs">•</span>
+                                                <span className="text-corporate-accent text-xs font-bold">{t.taskCode}</span>
+                                            </div>
+                                            <p className="text-sm font-bold text-corporate-dark">{t.title}</p>
+                                        </td>
+                                        <td className="py-5 px-4">
+                                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                                                <Calendar className={`w-4 h-4 ${t.status === 'Pendiente' ? 'text-red-400' : 'text-gray-400'}`} />
+                                                <span className={t.status === 'Pendiente' ? 'text-red-500' : ''}>{t.date}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-5 px-4">
+                                            <div className="flex -space-x-2">
+                                                {t.avatars.map((initials: string, i: number) => (
+                                                    <div
+                                                        key={i}
+                                                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white ${
+                                                            initials === 'CG' ? 'bg-emerald-500' :
+                                                            initials === 'MR' ? 'bg-corporate-blue' :
+                                                            initials === 'AL' ? 'bg-violet-500' : 'bg-pink-500'
+                                                        }`}
+                                                    >
+                                                        {initials}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td className="py-5 px-4">
+                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${getEstadoBadge(t.status)}`}>
+                                                {t.status}
+                                            </span>
+                                        </td>
+                                        <td className="py-5 pr-6 pl-4 text-right">
+                                            <Button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openEvidenceModal(t);
+                                                }}
+                                                className="bg-corporate-accent hover:bg-corporate-blue text-white rounded-lg py-2.5 shadow-sm text-sm cursor-pointer ml-auto"
+                                            >
+                                                <UploadCloud className="w-4 h-4 mr-2" />
+                                                Atender / Subir Evidencia
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                    {t.evidencias && t.evidencias.length > 0 && (
+                                        <tr onClick={(e) => e.stopPropagation()} className="bg-slate-50/30">
+                                            <td colSpan={6} className="px-6 pb-4 pt-1">
+                                                <div className="bg-slate-100/70 rounded-xl p-3 border border-slate-200/50 space-y-2">
+                                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                                        EVIDENCIAS CARGADAS ({t.evidencias.length})
+                                                    </span>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                        {t.evidencias.map((ev: any) => (
+                                                            <button 
+                                                                key={ev.idArchivoEvidencia} 
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedEvidenceForDetail(ev);
+                                                                    setIsEvidenceDetailOpen(true);
+                                                                }}
+                                                                className="bg-white border border-gray-100 rounded-lg p-2.5 flex items-center justify-between text-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] gap-2 hover:bg-blue-50/50 hover:border-blue-200 transition-colors cursor-pointer text-left w-full"
+                                                            >
+                                                                <div className="space-y-0.5 truncate pr-2 flex-1">
+                                                                    <p className="font-bold text-corporate-dark truncate">
+                                                                        {ev.nombreOriginal}
+                                                                    </p>
+                                                                    <p className="text-[10px] text-gray-400">
+                                                                        DOI: <span className="font-medium text-corporate-accent">{ev.doi}</span>
+                                                                    </p>
+                                                                    <p className="text-[9px] text-gray-500">
+                                                                        Subido por: <span className="font-semibold">{ev.elaboradorNombre || ev.elaborador?.nombre || "Usuario Desconocido"}</span> · {ev.fechaRegistro ? new Date(ev.fechaRegistro).toLocaleDateString() : "Fecha de registro no disponible"}
+                                                                    </p>
+                                                                </div>
+                                                                <div
+                                                                    className="inline-flex items-center justify-center p-1.5 rounded-md bg-slate-50 border border-gray-100 text-corporate-accent transition-colors"
+                                                                >
+                                                                    <UploadCloud className="h-4 w-4 text-corporate-accent" />
+                                                                </div>
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </td>
-                                    <td className="py-5 px-4">
-                                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${getEstadoBadge(t.status)}`}>
-                                            {t.status}
-                                        </span>
-                                    </td>
-                                    <td className="py-5 pr-6 pl-4 text-right">
-                                        <Button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                openEvidenceModal(t);
-                                            }}
-                                            className="bg-corporate-accent hover:bg-corporate-blue text-white rounded-lg py-2.5 shadow-sm text-sm cursor-pointer ml-auto"
-                                        >
-                                            <UploadCloud className="w-4 h-4 mr-2" />
-                                            Atender / Subir Evidencia
-                                        </Button>
-                                    </td>
-                                </tr>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </Fragment>
                             ))}
                             {filteredTasks.length === 0 && (
                                 <tr>
