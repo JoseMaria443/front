@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { X, Maximize2, Minimize2, UploadCloud, Info, Plus, Trash2 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { EvidenciaDetailSlideOver } from "../comunicados/EvidenciaDetailSlideOver";
 
 interface EvidenceSlideOverProps {
     isOpen: boolean;
@@ -21,8 +22,11 @@ interface EvidenceFormState {
 }
 
 export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: EvidenceSlideOverProps) {
+    const tarea = task;
     const [isExpanded, setIsExpanded] = useState(false);
     const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
+    const [selectedEvidenceForDetail, setSelectedEvidenceForDetail] = useState<any | null>(null);
+    const [isEvidenceDetailOpen, setIsEvidenceDetailOpen] = useState(false);
     const [evidences, setEvidences] = useState<EvidenceFormState[]>([
         { id: Math.random().toString(), doi: "", description: "", fileName: null }
     ]);
@@ -254,111 +258,130 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                 </div>
             </div>
 
-            {isTaskDetailOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
-                        onClick={() => setIsTaskDetailOpen(false)}
-                    />
+            {isTaskDetailOpen && (() => {
+                console.log("Evidencias en Modal Mis Tareas:", tarea?.evidencias);
+                return (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <div
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
+                            onClick={() => setIsTaskDetailOpen(false)}
+                        />
 
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all border border-gray-100 flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200">
-                        <div className="flex items-start justify-between p-5 border-b border-gray-100">
-                            <div>
-                                <span className="text-[10px] uppercase tracking-wider font-bold text-corporate-accent bg-blue-50 px-2.5 py-1 rounded-full">
-                                    Detalle de Tarea
-                                </span>
-                                <h3 className="text-lg font-bold text-corporate-dark mt-2">
-                                    {titleToShow}
-                                </h3>
-                            </div>
-                            <button
-                                onClick={() => setIsTaskDetailOpen(false)}
-                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        <div className="p-5 space-y-4 text-sm">
-                            <div className="space-y-1">
-                                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Descripción</span>
-                                <p className="text-gray-600 leading-relaxed text-xs bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                    {descriptionToShow}
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 pt-1">
+                        <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all border border-gray-100 flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200">
+                            <div className="flex items-start justify-between p-5 border-b border-gray-100">
                                 <div>
-                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fecha Límite</span>
-                                    <span className="text-gray-600 text-xs font-medium block mt-1">
-                                        {limitDateToShow}
+                                    <span className="text-[10px] uppercase tracking-wider font-bold text-corporate-accent bg-blue-50 px-2.5 py-1 rounded-full">
+                                        Detalle de Tarea
                                     </span>
+                                    <h3 className="text-lg font-bold text-corporate-dark mt-2">
+                                        {titleToShow}
+                                    </h3>
                                 </div>
-                                <div>
-                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado</span>
-                                    <span className="inline-flex items-center text-xs font-semibold text-corporate-blue bg-blue-50 px-2 py-0.5 rounded-full mt-1">
-                                        {statusToShow}
-                                    </span>
-                                </div>
+                                <button
+                                    onClick={() => setIsTaskDetailOpen(false)}
+                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
                             </div>
 
-                            <div className="space-y-2 border-t border-gray-100 pt-3.5">
-                                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Responsables</span>
-                                <div className="space-y-2 mt-1">
-                                    {task?.responsables?.map((r: any, i: number) => (
-                                        <div key={i} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                            <div>
-                                                <p className="text-xs font-bold text-corporate-dark">{r.responsable?.nombre || "Responsable"}</p>
-                                                <p className="text-[10px] text-gray-400">{r.responsable?.email || ""}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {(!task?.responsables || task?.responsables.length === 0) && (
-                                        <p className="text-xs text-gray-400 italic">Sin responsables asignados</p>
-                                    )}
+                            <div className="p-5 space-y-4 text-sm max-h-[60vh] overflow-y-auto">
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Descripción</span>
+                                    <p className="text-gray-600 leading-relaxed text-xs bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                        {descriptionToShow}
+                                    </p>
                                 </div>
-                            </div>
 
-                            {/* Evidencias en SlideOver de Evidencias */}
-                            {task?.evidencias && task.evidencias.length > 0 && (
-                                <div className="space-y-2 border-t border-gray-100 pt-3.5">
-                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Evidencias Cargadas</span>
-                                    <div className="space-y-2 mt-1">
-                                        {task.evidencias.map((ev: any, idx: number) => (
-                                            <div key={ev.idArchivoEvidencia || idx} className="bg-slate-50 border border-slate-100 p-3 rounded-lg flex items-center justify-between gap-3 shadow-sm">
-                                                <div className="truncate pr-2">
-                                                    <p className="text-xs font-bold text-corporate-dark truncate">{ev.nombreOriginal}</p>
-                                                    <p className="text-[10px] text-gray-400 mt-0.5">
-                                                        DOI: <span className="font-semibold text-corporate-accent">{ev.doi}</span> · {new Date(ev.fechaRegistro).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                                <a
-                                                    href={ev.urlArchivo}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center justify-center p-2 rounded-lg bg-white border border-gray-200 text-corporate-accent hover:bg-blue-50 transition-colors shadow-sm cursor-pointer"
-                                                    title="Ver archivo de evidencia"
-                                                >
-                                                    <UploadCloud className="h-4 w-4" />
-                                                </a>
-                                            </div>
-                                        ))}
+                                <div className="grid grid-cols-2 gap-4 pt-1">
+                                    <div>
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fecha Límite</span>
+                                        <span className="text-gray-600 text-xs font-medium block mt-1">
+                                            {limitDateToShow}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado</span>
+                                        <span className="inline-flex items-center text-xs font-semibold text-corporate-blue bg-blue-50 px-2 py-0.5 rounded-full mt-1">
+                                            {statusToShow}
+                                        </span>
                                     </div>
                                 </div>
-                            )}
-                        </div>
 
-                        <div className="bg-gray-50 px-5 py-4 border-t border-gray-100 flex justify-end">
-                            <Button
-                                onClick={() => setIsTaskDetailOpen(false)}
-                                className="px-4 py-2 text-xs bg-corporate-blue hover:bg-corporate-dark text-white rounded-lg transition-colors font-semibold"
-                            >
-                                Entendido
-                            </Button>
+                                <div className="space-y-2 border-t border-gray-100 pt-3.5">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Responsables</span>
+                                    <div className="space-y-2 mt-1">
+                                        {tarea?.responsables?.map((r: any, i: number) => (
+                                            <div key={i} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                                <div>
+                                                    <p className="text-xs font-bold text-corporate-dark">{r.responsable?.nombre || "Responsable"}</p>
+                                                    <p className="text-[10px] text-gray-400">{r.responsable?.email || ""}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {(!tarea?.responsables || tarea?.responsables.length === 0) && (
+                                            <p className="text-xs text-gray-400 italic">Sin responsables asignados</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Evidencias en SlideOver de Evidencias */}
+                                {tarea?.evidencias && tarea.evidencias.length > 0 && (
+                                    <div className="space-y-2 border-t border-gray-100 pt-3.5">
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">EVIDENCIAS CARGADAS</span>
+                                        <div className="space-y-2 mt-1">
+                                            {tarea.evidencias.map((ev: any, idx: number) => (
+                                                <button 
+                                                    key={ev.idArchivoEvidencia || idx} 
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedEvidenceForDetail(ev);
+                                                        setIsEvidenceDetailOpen(true);
+                                                    }}
+                                                    className="bg-white border border-gray-100 rounded-lg p-2.5 flex items-center justify-between text-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] gap-2 hover:bg-blue-50/50 hover:border-blue-200 transition-colors cursor-pointer text-left w-full"
+                                                >
+                                                    <div className="space-y-0.5 truncate pr-2 flex-1">
+                                                        <p className="font-bold text-corporate-dark truncate">
+                                                            {ev.nombreOriginal}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-400">
+                                                            DOI: <span className="font-medium text-corporate-accent">{ev.doi}</span>
+                                                        </p>
+                                                        <p className="text-[9px] text-gray-500">
+                                                            Subido por: <span className="font-semibold">{ev.elaboradorNombre || ev.elaborador?.nombre || "Usuario Desconocido"}</span> · {ev.fechaRegistro ? new Date(ev.fechaRegistro).toLocaleDateString() : "Fecha de registro no disponible"}
+                                                        </p>
+                                                    </div>
+                                                    <div
+                                                        className="inline-flex items-center justify-center p-1.5 rounded-md bg-slate-50 border border-gray-100 text-corporate-accent transition-colors"
+                                                    >
+                                                        <UploadCloud className="h-4 w-4 text-corporate-accent" />
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-gray-50 px-5 py-4 border-t border-gray-100 flex justify-end">
+                                <Button
+                                    onClick={() => setIsTaskDetailOpen(false)}
+                                    className="px-4 py-2 text-xs bg-corporate-blue hover:bg-corporate-dark text-white rounded-lg transition-colors font-semibold"
+                                >
+                                    Entendido
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
+
+            <EvidenciaDetailSlideOver
+                isOpen={isEvidenceDetailOpen}
+                onClose={() => setIsEvidenceDetailOpen(false)}
+                evidencia={selectedEvidenceForDetail}
+            />
         </>
     );
 }
