@@ -28,7 +28,7 @@ export default function DirectorioPage() {
     // Roles validation: check if currentUser has "Administrador" or "Director"
     const isAuthorized = currentUser?.cargos?.some(c => {
         const name = typeof c === "string" ? c : c.nombre;
-        return name === "Administrador" || name === "Director";
+        return name?.includes("Administrador") || name?.includes("Director");
     }) ?? false;
 
     const showToast = (message: string, type: "success" | "error" = "error") => {
@@ -136,13 +136,15 @@ export default function DirectorioPage() {
                     <p className="text-sm text-gray-500 mt-1">Gestión de empleados del sistema</p>
                 </div>
 
-                <Button
-                    onClick={() => setIsEmployeeModalOpen(true)}
-                    className="rounded-full shadow-md px-6 bg-corporate-blue hover:bg-corporate-dark cursor-pointer"
-                >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Nuevo Empleado
-                </Button>
+                {isAuthorized && (
+                    <Button
+                        onClick={() => setIsEmployeeModalOpen(true)}
+                        className="rounded-full shadow-md px-6 bg-corporate-blue hover:bg-corporate-dark cursor-pointer"
+                    >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Nuevo Empleado
+                    </Button>
+                )}
             </div>
 
             <div className="mt-4 space-y-4">

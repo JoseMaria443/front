@@ -44,7 +44,7 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
     // Roles validation: check if currentUser has "Administrador" or "Director"
     const isAuthorized = currentUser?.cargos?.some(c => {
         const name = typeof c === "string" ? c : c.nombre;
-        return name === "Administrador" || name === "Director";
+        return name?.includes("Administrador") || name?.includes("Director");
     }) ?? false;
 
     const fetchDetail = async (id: string) => {
