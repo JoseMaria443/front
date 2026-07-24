@@ -25,11 +25,13 @@ export default function DirectorioPage() {
 
     const currentUser = useSessionStore(state => state.user);
 
-    // Roles validation: check if currentUser has "Administrador" or "Director"
-    const isAuthorized = currentUser?.cargos?.some(c => {
-        const name = typeof c === "string" ? c : c.nombre;
-        return name?.includes("Administrador") || name?.includes("Director");
-    }) ?? false;
+    // Roles validation
+    const roles = (currentUser as any)?.cargos_nombres || currentUser?.cargos || [];
+    console.log("ROLES DETECTADOS FRONTEND:", roles);
+    const isAuthorized = roles.some((c: any) => {
+        const nombre = typeof c === 'string' ? c : (c.nombre || "");
+        return nombre.toLowerCase().includes("administrador") || nombre.toLowerCase().includes("director");
+    });
 
     const showToast = (message: string, type: "success" | "error" = "error") => {
         setToast({ message, type });
