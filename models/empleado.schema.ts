@@ -11,6 +11,7 @@ export const EmpleadoSchema = z.object({
 
     area: AreaSchema.optional(),
     cargos: z.array(CargoSchema).optional(),
+    cargos_nombres: z.array(z.string()).optional(),
 });
 export type Empleado = z.infer<typeof EmpleadoSchema>;
 
