@@ -6,6 +6,7 @@ import { Button } from "../../../components/ui/Button";
 import { EmployeeSlideOver } from "../../../components/directorio/EmployeeSlideOver";
 import { EmployeeProfileSlideOver } from "../../../components/directorio/EmployeeProfileSlideOver";
 import { api } from "../../../services/api.config";
+import { useSessionStore } from "../../../store/session.store";
 
 export default function DirectorioPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +19,28 @@ export default function DirectorioPage() {
     const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
     const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+    // Toast state
+    const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+    const currentUser = useSessionStore(state => state.user);
+
+    // Roles validation: check if currentUser has "Administrador" or "Director"
+    const isAuthorized = currentUser?.cargos?.some(c => {
+        const name = typeof c === "string" ? c : c.nombre;
+        return name === "Administrador" || name === "Director";
+    }) ?? false;
+
+    const showToast = (message: string, type: "success" | "error" = "error") => {
+        setToast({ message, type });
+    };
+
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => setToast(null), 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -43,12 +66,24 @@ export default function DirectorioPage() {
 
     const toggleEmpleadoActivo = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
+
+        if (id === currentUser?.idEmpleado) {
+            showToast("No puedes alterar tu propio estatus de cuenta.", "error");
+            return;
+        }
+        if (!isAuthorized) {
+            showToast("No cuentas con los permisos requeridos (Administrador o Director) para alterar este estatus.", "error");
+            return;
+        }
+
         try {
             await api.patch(`/api/empleado/${id}/toggle-status`);
+            showToast("Estatus del empleado actualizado con éxito.", "success");
             fetchData();
         } catch (err: any) {
             console.error("Error toggling employee status:", err);
-            alert("No se pudo cambiar el estatus del empleado.");
+            const msg = err.response?.data?.message || err.response?.data?.detail || "No se pudo cambiar el estatus del empleado.";
+            showToast(msg, "error");
         }
     };
 
@@ -152,6 +187,7 @@ export default function DirectorioPage() {
                                 ) : (
                                     empleadosFiltrados.map((emp, index) => {
                                         const areaName = areasList.find(a => a.id === emp.idArea)?.nombre || "—";
+                                        const isToggleDisabled = emp.id === currentUser?.idEmpleado || !isAuthorized;
                                         return (
                                             <tr 
                                                 key={emp.id} 
@@ -186,7 +222,9 @@ export default function DirectorioPage() {
                                                     <button
                                                         type="button"
                                                         onClick={(e) => toggleEmpleadoActivo(emp.id, e)}
-                                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${emp.activo ? 'bg-corporate-blue' : 'bg-gray-200'}`}
+                                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                                                            emp.activo ? 'bg-corporate-blue' : 'bg-gray-200'
+                                                        } ${isToggleDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                                                     >
                                                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emp.activo ? 'translate-x-4' : 'translate-x-1'}`} />
                                                     </button>
@@ -222,6 +260,23 @@ export default function DirectorioPage() {
                 areasList={areasList}
                 onStatusToggled={fetchData}
             />
+
+            {/* Custom Toast Popup */}
+            {toast && (
+                <div className={`fixed bottom-5 right-5 z-[100] flex items-center gap-2 px-4 py-3 rounded-xl border shadow-lg animate-in fade-in slide-in-from-bottom-5 duration-300 ${
+                    toast.type === "success" 
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-100" 
+                        : "bg-red-50 text-red-800 border-red-100"
+                }`}>
+                    <span className="text-xs font-semibold">{toast.message}</span>
+                    <button 
+                        onClick={() => setToast(null)} 
+                        className="text-gray-400 hover:text-gray-600 font-bold ml-2 text-sm focus:outline-none"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
