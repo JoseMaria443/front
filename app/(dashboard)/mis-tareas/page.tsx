@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EvidenceSlideOver } from "../../../components/mis-tareas/EvidenceSlideOver";
+import { TaskDetailSlideOver } from "../../../components/comunicados/TaskDetailSlideOver";
+import { EvidenciaDetailSlideOver } from "../../../components/comunicados/EvidenciaDetailSlideOver";
 import { Button } from "../../../components/ui/Button";
 import { Clock, AlertTriangle, UploadCloud, Calendar, CheckSquare } from "lucide-react";
-import { useDataStore } from "../../../store/data.store";
+import { useSessionStore } from "../../../store/session.store";
+import { api } from "../../../services/api.config";
 
 const getInitials = (nombre?: string) => {
     if (!nombre) return "U";
@@ -23,75 +26,153 @@ const getEstadoBadge = (status?: string) => {
 };
 
 export default function MisTareasPage() {
-    const { comunicados, subirEvidenciaATarea } = useDataStore();
-    const [selectedTask, setSelectedTask] = useState<any>(null);
-    const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+    const { user } = useSessionStore();
+    // @ts-ignore
+    const loggedInUserId = user?.id || user?.idEmpleado || "11111111-1111-1111-1111-111111111111"; // Dr. Martínez Reyes
+
+    const [tasksList, setTasksList] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
     const [filtroUrgencia, setFiltroUrgencia] = useState("Todas");
 
-    const loggedInUserId = "11111111-1111-1111-1111-111111111111"; // Dr. Martínez Reyes
+    const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
 
-    // Fetch tasks where the logged in user is a responsible
-    const userTasks: any[] = [];
-    comunicados.forEach((c) => {
-        if (c.tareas) {
-            c.tareas.forEach((t) => {
-                const isResp = t.responsables?.some((r) => r.idResponsable === loggedInUserId);
-                if (isResp) {
-                    const status = t.estado?.nombre || "Pendiente";
-                    userTasks.push({
-                        id: t.idTarea,
-                        code: c.folioDoi,
-                        taskCode: t.idTarea.slice(0, 5).toUpperCase(),
-                        title: t.resumenActividad,
-                        urgency: status === "Completada" ? "Completada" : "2d restantes",
-                        urgencyType: status === "Completada" ? "success" : "danger",
-                        date: new Date(t.fechaEntrega).toLocaleDateString('es-MX', {
-                            day: 'numeric', month: 'short', year: 'numeric'
-                        }),
-                        avatars: t.responsables?.map((r) => getInitials(r.responsable?.nombre)) || [],
-                        status: status
-                    });
-                }
+    const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<any>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+    const [selectedEvidenceForDetail, setSelectedEvidenceForDetail] = useState<any>(null);
+    const [isEvidenceDetailOpen, setIsEvidenceDetailOpen] = useState(false);
+
+    const fetchTasks = async () => {
+        setIsLoading(true);
+        setError("");
+        try {
+            const [tasksRes, comsRes, empsRes] = await Promise.all([
+                api.get<any[]>('/tareas/'),
+                api.get<any[]>('/comunicados/'),
+                api.get<any[]>('/api/empleado/?activo=true')
+            ]);
+
+            const comsMap = new Map(comsRes.data.map(c => [c.id, c]));
+            const empsMap = new Map(empsRes.data.map(e => [e.id, e]));
+
+            const filtered = tasksRes.data.filter((t: any) => {
+                return t.responsables?.some((r: any) => r.idEmpleado === loggedInUserId);
             });
+
+            const mapped = filtered.map((t: any) => {
+                const com = comsMap.get(t.idComunicado);
+                const status = t.estado || "Asignada";
+                
+                return {
+                    id: t.id,
+                    idTarea: t.id,
+                    idComunicado: t.idComunicado,
+                    code: com?.folioDoi || "N/A",
+                    taskCode: t.id.slice(0, 5).toUpperCase(),
+                    title: t.resumenActividad,
+                    descripcion: t.descripcion,
+                    fechaEntrega: t.fechaEntrega,
+                    date: new Date(t.fechaEntrega).toLocaleDateString('es-MX', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                    }),
+                    status: status,
+                    urgency: status === "Completada" ? "Completada" : "2d restantes",
+                    avatars: t.responsables?.map((r: any) => {
+                        const emp = empsMap.get(r.idEmpleado);
+                        return getInitials(emp?.nombre);
+                    }) || [],
+                    responsables: t.responsables?.map((r: any) => {
+                        const emp = empsMap.get(r.idEmpleado);
+                        return {
+                            idResponsable: r.idEmpleado,
+                            responsable: emp ? {
+                                idEmpleado: emp.id,
+                                nombre: emp.nombre,
+                                email: emp.email,
+                                idArea: emp.idArea,
+                                activo: emp.activo
+                            } : undefined
+                        };
+                    }) || [],
+                    evidencias: t.evidencias?.map((ev: any) => {
+                        const emp = empsMap.get(ev.idElaborador || ev.idUsuario);
+                        return {
+                            idArchivoEvidencia: ev.idArchivoEvidencia || ev.id,
+                            doi: ev.doi,
+                            nombreOriginal: ev.nombreOriginal,
+                            urlArchivo: ev.urlArchivo,
+                            fechaRegistro: ev.fechaRegistro,
+                            elaboradorNombre: ev.elaboradorNombre || emp?.nombre,
+                            elaborador: emp ? {
+                                idEmpleado: emp.id,
+                                nombre: emp.nombre,
+                                email: emp.email,
+                                idArea: emp.idArea,
+                                activo: emp.activo
+                            } : undefined
+                        };
+                    }) || []
+                };
+            });
+
+            setTasksList(mapped);
+        } catch (err) {
+            console.error("Error loading tasks:", err);
+            setError("Error al cargar las tareas desde el servidor.");
+        } finally {
+            setIsLoading(false);
         }
-    });
+    };
+
+    useEffect(() => {
+        fetchTasks();
+    }, [loggedInUserId]);
 
     const openEvidenceModal = (task: any) => {
         setSelectedTask(task);
         setIsSlideOverOpen(true);
     };
 
-    const handleEvidenceSuccess = (evs: any[]) => {
+    const handleRowClick = (task: any) => {
+        setSelectedTaskForDetail({
+            idTarea: task.id,
+            idComunicado: task.idComunicado,
+            resumenActividad: task.title,
+            descripcion: task.descripcion,
+            fechaEntrega: task.fechaEntrega,
+            estado: { nombre: task.status },
+            responsables: task.responsables,
+            colaboradores: [],
+            evidencias: task.evidencias
+        });
+        setIsDetailOpen(true);
+    };
+
+    const handleEvidenceSuccess = async (evs: any[]) => {
         if (selectedTask) {
             const taskId = selectedTask.id;
-            // Find which comunicado has this task
-            const c = comunicados.find((comunicado) => 
-                comunicado.tareas?.some((t) => t.idTarea === taskId)
-            );
-            if (c) {
-                const newEvs = evs.map((e) => ({
-                    idArchivoEvidencia: Math.random().toString(),
-                    doi: e.doi,
-                    descripcion: e.descripcion,
-                    urlArchivo: e.urlArchivo,
-                    nombreOriginal: e.nombreOriginal,
-                    idElaborador: loggedInUserId,
-                    fechaRegistro: e.fechaRegistro,
-                    elaborador: {
-                        idEmpleado: loggedInUserId,
-                        nombre: "Dr. Martínez Reyes",
-                        email: "m.martinez@universidad.edu.mx",
-                        idArea: "a1",
-                        activo: true
-                    }
-                }));
-                subirEvidenciaATarea(c.idComunicado, taskId, newEvs);
+            try {
+                for (const e of evs) {
+                    const payload = {
+                        idTarea: taskId,
+                        doi: e.doi,
+                        descripcion: e.descripcion,
+                        urlArchivo: "https://simulacion-cloudinary.com/evidencia.pdf",
+                        nombreOriginal: "evidencia.pdf"
+                    };
+                    await api.post('/evidencias/', payload);
+                }
+                setIsSlideOverOpen(false);
+                fetchTasks();
+            } catch (err) {
+                console.error("Error creating evidence:", err);
             }
         }
     };
 
-    // Simple filters based on status/urgency mapped categories
-    const filteredTasks = userTasks.filter((task) => {
+    const filteredTasks = tasksList.filter((task) => {
         if (filtroUrgencia === "Todas") return true;
         if (filtroUrgencia === "Alta") return task.status === "Pendiente";
         if (filtroUrgencia === "Media") return task.status === "En Progreso";
@@ -99,16 +180,16 @@ export default function MisTareasPage() {
         return true;
     });
 
-    const countAlta = userTasks.filter(t => t.status === "Pendiente").length;
-    const countMedia = userTasks.filter(t => t.status === "En Progreso").length;
-    const countBaja = userTasks.filter(t => t.status === "Completada").length;
+    const countAlta = tasksList.filter(t => t.status === "Pendiente").length;
+    const countMedia = tasksList.filter(t => t.status === "En Progreso").length;
+    const countBaja = tasksList.filter(t => t.status === "Completada").length;
 
     return (
         <div className="space-y-6">
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-corporate-dark">Mis Tareas</h1>
                 <p className="text-sm text-gray-500 mt-1">
-                    Inbox personal · {userTasks.length} tareas asignadas ordenadas por fecha de entrega
+                    Inbox personal · {tasksList.length} tareas asignadas ordenadas por fecha de entrega
                 </p>
             </div>
 
@@ -127,7 +208,7 @@ export default function MisTareasPage() {
                             : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                     }`}
                 >
-                    Todas <span className="ml-1 bg-white border text-[10px] rounded-full px-1.5 py-0.5">{userTasks.length}</span>
+                    Todas <span className="ml-1 bg-white border text-[10px] rounded-full px-1.5 py-0.5">{tasksList.length}</span>
                 </button>
                 <button 
                     onClick={() => setFiltroUrgencia("Alta")}
@@ -176,7 +257,11 @@ export default function MisTareasPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {filteredTasks.map((t, idx) => (
-                                <tr key={t.id} className={t.status === 'Pendiente' ? "bg-red-50/5" : "hover:bg-gray-50/50"}>
+                                <tr 
+                                    key={t.id} 
+                                    onClick={() => handleRowClick(t)}
+                                    className={`${t.status === 'Pendiente' ? "bg-red-50/5" : "hover:bg-gray-50/50"} cursor-pointer transition-colors`}
+                                >
                                     <td className="py-5 pl-6 pr-4">
                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
                                             t.status === 'Completada' 
@@ -226,7 +311,10 @@ export default function MisTareasPage() {
                                     </td>
                                     <td className="py-5 pr-6 pl-4 text-right">
                                         <Button
-                                            onClick={() => openEvidenceModal(t)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openEvidenceModal(t);
+                                            }}
                                             className="bg-corporate-accent hover:bg-corporate-blue text-white rounded-lg py-2.5 shadow-sm text-sm cursor-pointer ml-auto"
                                         >
                                             <UploadCloud className="w-4 h-4 mr-2" />
@@ -252,6 +340,18 @@ export default function MisTareasPage() {
                 onClose={() => setIsSlideOverOpen(false)}
                 task={selectedTask}
                 onSuccess={handleEvidenceSuccess}
+            />
+
+            <TaskDetailSlideOver
+                isOpen={isDetailOpen}
+                onClose={() => setIsDetailOpen(false)}
+                task={selectedTaskForDetail}
+            />
+
+            <EvidenciaDetailSlideOver
+                isOpen={isEvidenceDetailOpen}
+                onClose={() => setIsEvidenceDetailOpen(false)}
+                evidencia={selectedEvidenceForDetail}
             />
         </div>
     );
