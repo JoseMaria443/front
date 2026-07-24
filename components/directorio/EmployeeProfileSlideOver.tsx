@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, User, Calendar, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Button } from "../ui/Button";
 import { api } from "../../services/api.config";
+import { useSessionStore } from "../../store/session.store";
 
 interface HistorialEstatus {
     id: string;
@@ -38,6 +39,14 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState("");
 
+    const currentUser = useSessionStore(state => state.user);
+
+    // Roles validation: check if currentUser has "Administrador" or "Director"
+    const isAuthorized = currentUser?.cargos?.some(c => {
+        const name = typeof c === "string" ? c : c.nombre;
+        return name === "Administrador" || name === "Director";
+    }) ?? false;
+
     const fetchDetail = async (id: string) => {
         setIsLoading(true);
         setError("");
@@ -63,7 +72,7 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
     if (!isOpen) return null;
 
     const handleToggleStatus = async () => {
-        if (!detail || isUpdating) return;
+        if (!detail || isUpdating || detail.id === currentUser?.idEmpleado || !isAuthorized) return;
         setIsUpdating(true);
         setError("");
         try {
@@ -92,12 +101,12 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
               .toUpperCase()
         : "U";
 
-    // Format date nicely
+    // Format date safely (backend now returns ISO 8601)
     const formatHistoryDate = (dateStr: string | null) => {
         if (!dateStr) return "Fecha no disponible";
         try {
-            // Check if string contains standard ISO date
-            const date = new Date(dateStr.replace(" ", "T")); // handle both space and T separators safely
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
             return date.toLocaleString('es-MX', {
                 year: 'numeric',
                 month: 'short',
@@ -109,6 +118,9 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
             return dateStr;
         }
     };
+
+    const isSelf = detail?.id === currentUser?.idEmpleado;
+    const isSwitchDisabled = isUpdating || isSelf || !isAuthorized;
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -162,17 +174,27 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
                                     </div>
                                     <button
                                         type="button"
-                                        disabled={isUpdating}
+                                        disabled={isSwitchDisabled}
                                         onClick={handleToggleStatus}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer shrink-0 ${
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
                                             detail.activo ? 'bg-corporate-blue' : 'bg-gray-200'
-                                        }`}
+                                        } ${isSwitchDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                                     >
                                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                                             detail.activo ? 'translate-x-5' : 'translate-x-1'
                                         }`} />
                                     </button>
                                 </div>
+                                {isSelf && (
+                                    <p className="text-[10px] text-amber-600 font-medium bg-amber-50 p-2 rounded-lg border border-amber-100">
+                                        No puedes alterar tu propio estatus de cuenta.
+                                    </p>
+                                )}
+                                {!isSelf && !isAuthorized && (
+                                    <p className="text-[10px] text-red-600 font-medium bg-red-50 p-2 rounded-lg border border-red-100">
+                                        No cuentas con los permisos requeridos (Administrador o Director) para alterar este estatus.
+                                    </p>
+                                )}
                                 <div className="flex items-center gap-2 pt-1 border-t border-gray-50">
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estatus actual:</span>
                                     <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -217,7 +239,7 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
                                                 </div>
                                                 <div className="space-y-0.5">
                                                     <p className="text-xs font-bold text-corporate-dark">
-                                                        {isActivation ? "Usuario Activado" : "Usuario Desactivado"}
+                                                        {isActivation ? "Usuario Reactivado" : "Usuario Desactivado"}
                                                     </p>
                                                     <p className="text-[10px] text-gray-400 flex items-center gap-1">
                                                         <Calendar className="h-3 w-3" />
