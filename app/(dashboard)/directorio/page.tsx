@@ -25,10 +25,10 @@ export default function DirectorioPage() {
 
     const currentUser = useSessionStore(state => state.user);
 
-    // Roles validation
+    // Roles validation: check if currentUser has "Administrador" or "Director"
     const roles = (currentUser as any)?.cargos_nombres || currentUser?.cargos || [];
     console.log("ROLES DETECTADOS FRONTEND:", roles);
-    const isAuthorized = roles.some((c: any) => {
+    const hasAdminAccess = roles.some((c: any) => {
         const nombre = typeof c === 'string' ? c : (c.nombre || "");
         return nombre.toLowerCase().includes("administrador") || nombre.toLowerCase().includes("director");
     });
@@ -73,7 +73,7 @@ export default function DirectorioPage() {
             showToast("No puedes alterar tu propio estatus de cuenta.", "error");
             return;
         }
-        if (!isAuthorized) {
+        if (!hasAdminAccess) {
             showToast("No cuentas con los permisos requeridos (Administrador o Director) para alterar este estatus.", "error");
             return;
         }
@@ -138,7 +138,7 @@ export default function DirectorioPage() {
                     <p className="text-sm text-gray-500 mt-1">Gestión de empleados del sistema</p>
                 </div>
 
-                {isAuthorized && (
+                {hasAdminAccess && (
                     <Button
                         onClick={() => setIsEmployeeModalOpen(true)}
                         className="rounded-full shadow-md px-6 bg-corporate-blue hover:bg-corporate-dark cursor-pointer"
@@ -191,7 +191,7 @@ export default function DirectorioPage() {
                                 ) : (
                                     empleadosFiltrados.map((emp, index) => {
                                         const areaName = areasList.find(a => a.id === emp.idArea)?.nombre || "—";
-                                        const isToggleDisabled = emp.id === currentUser?.idEmpleado || !isAuthorized;
+                                        const isToggleDisabled = emp.id === currentUser?.idEmpleado || !hasAdminAccess;
                                         return (
                                             <tr 
                                                 key={emp.id} 

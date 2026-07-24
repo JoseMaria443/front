@@ -230,7 +230,10 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
                                 <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Historial de Acciones</span>
                                 <div className="border-l-2 border-slate-100 pl-4 ml-2.5 space-y-5">
                                     {detail.historial.map((hist, idx) => {
-                                        const isActivation = hist.accion === "REACTIVACION" || hist.accion === "ACTIVACION" || hist.accion.includes("ACTI");
+                                        console.log("ITEM HISTORIAL:", hist);
+                                        const rawDate = hist.fechaRegistro || (hist as any).fecha_registro || (hist as any).fecha;
+                                        const actionText = String(hist.accion || "").toUpperCase();
+                                        const isActivation = actionText.includes("ACTI") && !actionText.includes("DESACTI");
                                         return (
                                             <div key={hist.id || idx} className="relative">
                                                 {/* Line indicator icon */}
@@ -245,7 +248,7 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
                                                     </p>
                                                     <p className="text-[10px] text-gray-400 flex items-center gap-1">
                                                         <Calendar className="h-3 w-3" />
-                                                        {formatHistoryDate(hist.fechaRegistro)}
+                                                        {formatHistoryDate(rawDate)}
                                                     </p>
                                                     <p className="text-[10px] text-gray-500 font-medium">
                                                         Modificado por: <span className="font-semibold text-corporate-accent">{hist.modifierNombre || "Usuario Desconocido"}</span>
