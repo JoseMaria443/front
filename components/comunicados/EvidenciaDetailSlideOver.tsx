@@ -118,22 +118,37 @@ export function EvidenciaDetailSlideOver({ isOpen, onClose, evidencia }: Evidenc
                                 </p>
                             </div>
                         )}
+
+                        <div className="border-t border-gray-100 pt-4 space-y-2">
+                            <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Archivos Adjuntos</span>
+                            {evidencia.urlArchivo ? (
+                                <div className="space-y-2">
+                                    <a
+                                        href={evidencia.urlArchivo}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-colors group cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-2.5 truncate">
+                                            <FileText className="h-4 w-4 text-corporate-accent shrink-0" />
+                                            <span className="text-xs font-semibold text-corporate-dark truncate">
+                                                {evidencia.nombreOriginal}
+                                            </span>
+                                        </div>
+                                        <Download className="h-3.5 w-3.5 text-gray-400 group-hover:text-corporate-accent transition-colors shrink-0" />
+                                    </a>
+                                </div>
+                            ) : (
+                                <p className="text-xs text-gray-400 italic">No hay archivos adjuntos en esta evidencia</p>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                <div className="border-t border-gray-100 p-6 bg-gray-50 flex flex-col gap-2">
-                    <a
-                        href={evidencia.urlArchivo}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-corporate-accent hover:bg-corporate-accent/90 text-white rounded-lg text-xs font-bold shadow transition-colors cursor-pointer text-center"
-                    >
-                        <Download className="h-4 w-4" />
-                        Ver / Descargar Documento
-                    </a>
+                <div className="border-t border-gray-100 p-6 bg-gray-50 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="w-full px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                        className="px-4 py-2 bg-corporate-blue text-white rounded-lg text-xs font-semibold hover:bg-corporate-dark transition-colors cursor-pointer"
                     >
                         Cerrar
                     </button>
