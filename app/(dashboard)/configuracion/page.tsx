@@ -26,7 +26,6 @@ const CATALOGOS_CONFIG: Record<string, CatalogoConfig> = {
     "Tipos de Comunicado": { label: "Tipos de Comunicado", endpoint: "/tipos-comunicado", isReadOnly: false, nameKey: "nombre" },
     "Medios de Recepción": { label: "Medios de Recepción", endpoint: "/medios-recepcion", isReadOnly: false, nameKey: "nombre" },
     "Roles de Destinatario": { label: "Roles de Destinatario", endpoint: "/roles-destinatario", isReadOnly: false, nameKey: "descripcion_rol" },
-    "Roles de Responsable": { label: "Roles de Responsable", endpoint: "/roles-responsable", isReadOnly: false, nameKey: "descripcion_rol" },
     "Estados de Tarea": { label: "Estados de Tarea", endpoint: "/estados-tarea", isReadOnly: true, nameKey: "nombre" },
 };
 
