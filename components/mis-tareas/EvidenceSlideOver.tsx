@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Maximize2, Minimize2, UploadCloud, Info, Plus, Trash2 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { uploadToCloudinary } from "../../services/cloudinary.service";
 
 interface EvidenceSlideOverProps {
     isOpen: boolean;
@@ -16,28 +17,32 @@ interface EvidenceFormState {
     id: string;
     doi: string;
     description: string;
+    file: File | null;
     fileName: string | null;
 }
 
 export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: EvidenceSlideOverProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState("");
     const [evidences, setEvidences] = useState<EvidenceFormState[]>([
-        { id: Math.random().toString(), doi: "", description: "", fileName: null }
+        { id: Math.random().toString(), doi: "", description: "", file: null, fileName: null }
     ]);
 
     useEffect(() => {
         if (isOpen) {
             setEvidences([
-                { id: Math.random().toString(), doi: "", description: "", fileName: null }
+                { id: Math.random().toString(), doi: "", description: "", file: null, fileName: null }
             ]);
+            setSubmitError("");
         }
     }, [isOpen, task]);
 
     const addEvidence = () => {
         setEvidences([
             ...evidences,
-            { id: Math.random().toString(), doi: "", description: "", fileName: null }
+            { id: Math.random().toString(), doi: "", description: "", file: null, fileName: null }
         ]);
     };
 
@@ -188,7 +193,7 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                                                 </div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => updateEvidence(ev.id, { fileName: null })}
+                                                    onClick={() => updateEvidence(ev.id, { file: null, fileName: null })}
                                                     className="text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-colors cursor-pointer"
                                                 >
                                                     <X className="h-4 w-4" />
@@ -196,11 +201,25 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                                             </div>
                                         ) : (
                                             <div
-                                                onClick={() => updateEvidence(ev.id, { fileName: `evidencia_${codeToShow || 'COM'}_${index + 1}.pdf` })}
+                                                onClick={() => document.getElementById(`file-${ev.id}`)?.click()}
                                                 className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer group/upload"
                                             >
+                                                <input
+                                                    type="file"
+                                                    id={`file-${ev.id}`}
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const selectedFile = e.target.files?.[0];
+                                                        if (selectedFile) {
+                                                            updateEvidence(ev.id, {
+                                                                file: selectedFile,
+                                                                fileName: selectedFile.name
+                                                            });
+                                                        }
+                                                    }}
+                                                />
                                                 <UploadCloud className="h-8 w-8 text-corporate-blue mb-3 group-hover/upload:scale-110 transition-transform" />
-                                                <p className="text-xs font-semibold text-corporate-dark">Simular subida de archivo (Haz clic aquí)</p>
+                                                <p className="text-xs font-semibold text-corporate-dark">Seleccionar archivo (Haz clic aquí)</p>
                                                 <p className="text-[10px] text-gray-500 mt-1">Un archivo · PDF, imagen, video · Máx. 50 MB</p>
                                             </div>
                                         )}
@@ -222,26 +241,42 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                     <div className="border-t border-gray-100 p-6 bg-white">
                         {isValid ? (
                             <Button
-                                onClick={() => {
-                                    if (onSuccess) {
-                                        onSuccess(
-                                            evidences.map((e) => ({
-                                                doi: e.doi,
-                                                descripcion: e.description,
-                                                urlArchivo: "https://simulacion-cloudinary.com/evidencia.pdf",
-                                                nombreOriginal: e.fileName || "evidencia.pdf",
-                                                fechaRegistro: new Date().toISOString()
-                                            }))
+                                onClick={async () => {
+                                    if (isSubmitting) return;
+                                    setIsSubmitting(true);
+                                    setSubmitError("");
+                                    try {
+                                        const uploadedEvidences = await Promise.all(
+                                            evidences.map(async (e) => {
+                                                if (!e.file) throw new Error("No file selected");
+                                                const res = await uploadToCloudinary(e.file);
+                                                return {
+                                                    doi: e.doi,
+                                                    descripcion: e.description,
+                                                    urlArchivo: res.secure_url,
+                                                    nombreOriginal: res.original_filename,
+                                                    fechaRegistro: new Date().toISOString()
+                                                };
+                                            })
                                         );
-                                    } else {
-                                        alert(`¡Éxito! Se han registrado ${evidences.length} evidencias.`);
+                                        if (onSuccess) {
+                                            onSuccess(uploadedEvidences);
+                                        } else {
+                                            alert(`¡Éxito! Se han registrado ${evidences.length} evidencias.`);
+                                        }
+                                        onClose();
+                                    } catch (err: any) {
+                                        console.error("Error uploading to Cloudinary:", err);
+                                        setSubmitError(err.message || "Error al subir archivos a Cloudinary.");
+                                    } finally {
+                                        setIsSubmitting(false);
                                     }
-                                    onClose();
                                 }}
+                                disabled={isSubmitting}
                                 className="w-full py-6 text-sm bg-corporate-accent hover:bg-corporate-blue text-white rounded-xl font-semibold transition-all duration-200 cursor-pointer"
                             >
                                 <UploadCloud className="h-4 w-4 mr-2" />
-                                Registrar {evidences.length} Evidencia{evidences.length > 1 ? "s" : ""}
+                                {isSubmitting ? "Subiendo a Cloudinary..." : `Registrar ${evidences.length} Evidencia${evidences.length > 1 ? "s" : ""}`}
                             </Button>
                         ) : (
                             <Button className="w-full py-6 text-sm bg-gray-100 text-gray-400 hover:bg-gray-100 cursor-not-allowed rounded-xl font-semibold">

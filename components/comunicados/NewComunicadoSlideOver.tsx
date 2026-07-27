@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { api } from "../../services/api.config";
+import { uploadToCloudinary } from "../../services/cloudinary.service";
 
 interface NewComunicadoSlideOverProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
     const [idTipo, setIdTipo] = useState("");
     const [destinatariosSeleccionados, setDestinatariosSeleccionados] = useState<string[]>([]);
     const [idRolDestinatario, setIdRolDestinatario] = useState("");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     // Catalog States
     const [tiposList, setTiposList] = useState<any[]>([]);
@@ -75,6 +77,19 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
 
         setIsSubmitting(true);
         setError("");
+
+        let secureUrl = "";
+        try {
+            if (selectedFile) {
+                const uploadRes = await uploadToCloudinary(selectedFile);
+                secureUrl = uploadRes.secure_url;
+            }
+        } catch (err: any) {
+            console.error("Error uploading to Cloudinary:", err);
+            setError(err.message || "Error al subir el archivo adjunto a Cloudinary.");
+            setIsSubmitting(false);
+            return;
+        }
         
         const payload = {
             folioDoi: folio,
@@ -89,7 +104,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
                 idDestinatario: idDest,
                 idRolDestinatario
             })),
-            archivoUrl: "https://simulacion-cloudinary.com/documento_adjunto.pdf"
+            archivoUrl: secureUrl || undefined
         };
 
         try {
@@ -106,6 +121,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
             setIdTipo("");
             setDestinatariosSeleccionados([]);
             setIdRolDestinatario("");
+            setSelectedFile(null);
             
             if (onSuccess) {
                 onSuccess();
@@ -325,8 +341,15 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
                         <input
                             type="file"
                             accept=".pdf"
-                            className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-corporate-blue hover:file:bg-blue-100"
+                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                            disabled={isSubmitting}
+                            className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-corporate-blue hover:file:bg-blue-100 disabled:opacity-50"
                         />
+                        {selectedFile && (
+                            <p className="text-[10px] text-emerald-600 font-semibold mt-1">
+                                Archivo seleccionado: {selectedFile.name}
+                            </p>
+                        )}
                     </div>
                 </div>
 

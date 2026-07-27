@@ -261,8 +261,8 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                         idTarea: task.idTarea,
                         doi: e.doi,
                         descripcion: e.descripcion,
-                        urlArchivo: "https://simulacion-cloudinary.com/evidencia.pdf",
-                        nombreOriginal: "evidencia.pdf"
+                        urlArchivo: e.urlArchivo,
+                        nombreOriginal: e.nombreOriginal
                     };
                     await api.post('/evidencias/', payload);
                 }
