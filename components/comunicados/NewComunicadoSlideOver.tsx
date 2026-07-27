@@ -336,11 +336,11 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
                     {/* Archivo Adjunto */}
                     <div className="space-y-1 pt-2">
                         <label className="text-xs font-bold text-gray-700">
-                            Documento Adjunto (PDF)
+                            Documento Adjunto (PDF o Imagen)
                         </label>
                         <input
                             type="file"
-                            accept=".pdf"
+                            accept=".pdf, image/jpeg, image/png, image/jpg"
                             onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                             disabled={isSubmitting}
                             className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-corporate-blue hover:file:bg-blue-100 disabled:opacity-50"

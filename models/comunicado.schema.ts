@@ -18,6 +18,7 @@ export const ArchivoEvidenciaSchema = z.object({
     fechaRegistro: z.string(), // Cambiado a string simple por tolerancia de formatos de fecha ISO
     elaboradorNombre: z.string().optional(),
     elaborador: EmpleadoSchema.optional(),
+    archivos: z.array(z.object({ urlArchivo: z.string(), nombreOriginal: z.string() })).optional(),
 });
 export type ArchivoEvidencia = z.infer<typeof ArchivoEvidenciaSchema>;
 
@@ -44,12 +45,13 @@ export const TareaSchema = z.object({
     responsables: z.array(TareaResponsableSchema).optional(),
     evidencias: z.array(ArchivoEvidenciaSchema).optional(),
     colaboradores: z.array(EmpleadoSchema).optional(),
+    archivos: z.array(z.object({ urlArchivo: z.string(), nombreOriginal: z.string() })).optional(),
 });
 export type Tarea = z.infer<typeof TareaSchema>;
 
 export const ComunicadoArchivoSchema = z.object({
-    idArchivo: z.string().uuid(),
-    urlArchivo: z.string().url(),
+    idArchivo: z.string().uuid().optional(),
+    urlArchivo: z.string(),
     nombreOriginal: z.string(),
 });
 export type ComunicadoArchivo = z.infer<typeof ComunicadoArchivoSchema>;

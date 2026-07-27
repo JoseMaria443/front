@@ -207,6 +207,7 @@ export function EvidenceSlideOver({ isOpen, onClose, task, onSuccess }: Evidence
                                                 <input
                                                     type="file"
                                                     id={`file-${ev.id}`}
+                                                    accept=".pdf, image/jpeg, image/png, image/jpg"
                                                     className="hidden"
                                                     onChange={(e) => {
                                                         const selectedFile = e.target.files?.[0];
