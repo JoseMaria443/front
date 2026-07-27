@@ -198,13 +198,19 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                             })
                         };
                     }),
-                    archivos: c.archivoUrl ? [
-                        {
-                            idArchivo: comId + "_file",
-                            urlArchivo: c.archivoUrl,
-                            nombreOriginal: c.archivoUrl.split('/').pop() || "archivo.pdf"
-                        }
-                    ] : []
+                    archivos: (c.archivos && c.archivos.length > 0)
+                        ? c.archivos.map((arch: any) => ({
+                            idArchivo: arch.idArchivo || arch.id || Math.random().toString(),
+                            urlArchivo: arch.urlArchivo,
+                            nombreOriginal: arch.nombreOriginal
+                          }))
+                        : (c.archivoUrl ? [
+                            {
+                                idArchivo: comId + "_file",
+                                urlArchivo: c.archivoUrl,
+                                nombreOriginal: c.archivoUrl.split('/').pop() || "archivo.pdf"
+                            }
+                          ] : [])
                 };
             });
 

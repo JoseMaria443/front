@@ -104,7 +104,7 @@ export function NewComunicadoSlideOver({ isOpen, onClose, onSuccess }: NewComuni
                 idDestinatario: idDest,
                 idRolDestinatario
             })),
-            archivoUrl: secureUrl || undefined
+            archivos: secureUrl ? [{ urlArchivo: secureUrl, nombreOriginal: selectedFile?.name || "documento.pdf" }] : []
         };
 
         try {
