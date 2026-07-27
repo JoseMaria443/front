@@ -90,7 +90,7 @@ export default function MisTareasPage() {
             const empsMap = new Map(empsRes.data.map(e => [e.id, e]));
 
             const filtered = tasksRes.data.filter((t: any) => {
-                return t.responsables?.some((r: any) => r.idEmpleado === loggedInUserId);
+                return t.responsables?.some((r: any) => r.idResponsable === loggedInUserId || r.idEmpleado === loggedInUserId);
             });
 
             const mapped = filtered.map((t: any) => {
@@ -112,20 +112,22 @@ export default function MisTareasPage() {
                     status: status,
                     urgency: status === "Completada" ? "Completada" : "2d restantes",
                     avatars: t.responsables?.map((r: any) => {
-                        const emp = empsMap.get(r.idEmpleado);
-                        return getInitials(emp?.nombre);
+                        const nombre = r.responsable?.nombre || empsMap.get(r.idResponsable || r.idEmpleado)?.nombre;
+                        return getInitials(nombre);
                     }) || [],
                     responsables: t.responsables?.map((r: any) => {
-                        const emp = empsMap.get(r.idEmpleado);
+                        const emp = empsMap.get(r.idResponsable || r.idEmpleado);
                         return {
-                            idResponsable: r.idEmpleado,
-                            responsable: emp ? {
+                            idResponsable: r.idResponsable || r.idEmpleado,
+                            idRolResponsable: r.idRolResponsable,
+                            rolNombre: r.rolNombre,
+                            responsable: r.responsable || (emp ? {
                                 idEmpleado: emp.id,
                                 nombre: emp.nombre,
                                 email: emp.email,
                                 idArea: emp.idArea,
                                 activo: emp.activo
-                            } : undefined
+                            } : undefined)
                         };
                     }) || [],
                     evidencias: t.evidencias?.map((ev: any) => {

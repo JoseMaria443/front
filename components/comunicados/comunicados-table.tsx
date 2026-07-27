@@ -168,17 +168,11 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                             fechaRegistro: t.fechaRegistro,
                             estado: { idEstadoTarea: t.idEstadoTarea, nombre: t.estado || "Asignada" },
                             responsables: (t.responsables || []).map((resp: any) => {
-                                const emp = empsMap.get(resp.idEmpleado);
                                 return {
-                                    idResponsable: resp.idEmpleado,
-                                    idRolResponsable: "00000000-0000-0000-0000-000000000001",
-                                    responsable: emp ? {
-                                        idEmpleado: emp.id,
-                                        nombre: emp.nombre,
-                                        email: emp.email,
-                                        idArea: emp.idArea,
-                                        activo: emp.activo
-                                    } : undefined
+                                    idResponsable: resp.idResponsable,
+                                    idRolResponsable: resp.idRolResponsable,
+                                    rolNombre: resp.rolNombre,
+                                    responsable: resp.responsable
                                 };
                             }),
                             colaboradores: [],
