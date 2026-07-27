@@ -14,14 +14,46 @@ const getInitials = (nombre?: string) => {
     return nombre.split(' ').filter(n => n.length > 0).map(n => n[0]).join('').slice(0, 2).toUpperCase();
 };
 
-const getEstadoBadge = (status?: string) => {
-    switch (status) {
-        case "Completada":
-            return "bg-emerald-50 text-emerald-600 border-emerald-100";
-        case "En Progreso":
-            return "bg-amber-50 text-amber-600 border-amber-100";
+const getEstadoColorClasses = (status?: string) => {
+    const est = (status || "asignada").toLowerCase();
+    switch (est) {
+        case "en progreso":
+        case "en-proceso":
+            return {
+                badge: "bg-amber-50 text-amber-600 border-amber-100",
+                border: "border-l-amber-500"
+            };
+        case "entregada":
+            return {
+                badge: "bg-indigo-50 text-indigo-600 border-indigo-100",
+                border: "border-l-indigo-500"
+            };
+        case "revisada":
+            return {
+                badge: "bg-emerald-50 text-emerald-600 border-emerald-100",
+                border: "border-l-emerald-500"
+            };
+        case "rechazada":
+            return {
+                badge: "bg-red-50 text-red-600 border-red-100",
+                border: "border-l-red-500"
+            };
+        case "vencida":
+            return {
+                badge: "bg-orange-50 text-orange-600 border-orange-100",
+                border: "border-l-orange-500"
+            };
+        case "cancelada":
+            return {
+                badge: "bg-gray-50 text-gray-500 border-gray-200",
+                border: "border-l-gray-400"
+            };
+        case "asignada":
         default:
-            return "bg-slate-50 text-slate-500 border-slate-200";
+            return {
+                badge: "bg-slate-50 text-slate-500 border-slate-200",
+                border: "border-l-slate-400"
+            };
     }
 };
 
@@ -256,71 +288,76 @@ export default function MisTareasPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {filteredTasks.map((t, idx) => (
-                                <Fragment key={t.id}>
-                                    <tr 
-                                        onClick={() => handleRowClick(t)}
-                                        className={`${t.status === 'Pendiente' ? "bg-red-50/5" : "hover:bg-gray-50/50"} cursor-pointer transition-colors`}
-                                    >
-                                        <td className="py-5 pl-6 pr-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-                                                t.status === 'Completada' 
-                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                                                    : t.status === 'En Progreso' 
-                                                    ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                    : 'bg-red-50 text-red-600 border-red-100'
-                                            }`}>
-                                                {t.status === 'Completada' ? <CheckSquare className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                                                {t.urgency}
-                                            </span>
-                                        </td>
-                                        <td className="py-5 px-4">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-corporate-accent text-xs font-bold">{t.code}</span>
-                                                <span className="text-gray-300 text-xs">•</span>
-                                                <span className="text-corporate-accent text-xs font-bold">{t.taskCode}</span>
-                                            </div>
-                                            <p className="text-sm font-bold text-corporate-dark">{t.title}</p>
-                                        </td>
-                                        <td className="py-5 px-4">
-                                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                                                <Calendar className={`w-4 h-4 ${t.status === 'Pendiente' ? 'text-red-400' : 'text-gray-400'}`} />
-                                                <span className={t.status === 'Pendiente' ? 'text-red-500' : ''}>{t.date}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-5 px-4">
-                                            <div className="flex -space-x-2">
-                                                {t.avatars.map((initials: string, i: number) => (
-                                                    <div
-                                                        key={i}
-                                                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white ${
-                                                            initials === 'CG' ? 'bg-emerald-500' :
-                                                            initials === 'MR' ? 'bg-corporate-blue' :
-                                                            initials === 'AL' ? 'bg-violet-500' : 'bg-pink-500'
-                                                        }`}
+                            {filteredTasks.map((t, idx) => {
+                                const estadoClasses = getEstadoColorClasses(t.status);
+                                const isTerminal = ['revisada', 'cancelada'].includes((t.status || "").toLowerCase());
+                                return (
+                                    <Fragment key={t.id}>
+                                        <tr 
+                                            onClick={() => handleRowClick(t)}
+                                            className={`${t.status === 'Pendiente' ? "bg-red-50/5" : "hover:bg-gray-50/50"} border-l-4 ${estadoClasses.border} cursor-pointer transition-colors`}
+                                        >
+                                            <td className="py-5 pl-6 pr-4">
+                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                                                    t.status === 'Completada' 
+                                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                                                        : t.status === 'En Progreso' 
+                                                        ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                        : 'bg-red-50 text-red-600 border-red-100'
+                                                }`}>
+                                                    {t.status === 'Completada' ? <CheckSquare className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                                                    {t.urgency}
+                                                </span>
+                                            </td>
+                                            <td className="py-5 px-4">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-corporate-accent text-xs font-bold">{t.code}</span>
+                                                    <span className="text-gray-300 text-xs">•</span>
+                                                    <span className="text-corporate-accent text-xs font-bold">{t.taskCode}</span>
+                                                </div>
+                                                <p className="text-sm font-bold text-corporate-dark">{t.title}</p>
+                                            </td>
+                                            <td className="py-5 px-4">
+                                                <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                                                    <Calendar className={`w-4 h-4 ${t.status === 'Pendiente' ? 'text-red-400' : 'text-gray-400'}`} />
+                                                    <span className={t.status === 'Pendiente' ? 'text-red-500' : ''}>{t.date}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-5 px-4">
+                                                <div className="flex -space-x-2">
+                                                    {t.avatars.map((initials: string, i: number) => (
+                                                        <div
+                                                            key={i}
+                                                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white ${
+                                                                initials === 'CG' ? 'bg-emerald-500' :
+                                                                initials === 'MR' ? 'bg-corporate-blue' :
+                                                                initials === 'AL' ? 'bg-violet-500' : 'bg-pink-500'
+                                                            }`}
+                                                        >
+                                                            {initials}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </td>
+                                            <td className="py-5 px-4">
+                                                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${estadoClasses.badge}`}>
+                                                    {t.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-5 pr-6 pl-4 text-right">
+                                                {!isTerminal && (
+                                                    <Button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            openEvidenceModal(t);
+                                                        }}
+                                                        className="bg-corporate-accent hover:bg-corporate-blue text-white rounded-lg py-2.5 shadow-sm text-sm cursor-pointer ml-auto"
                                                     >
-                                                        {initials}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td className="py-5 px-4">
-                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${getEstadoBadge(t.status)}`}>
-                                                {t.status}
-                                            </span>
-                                        </td>
-                                        <td className="py-5 pr-6 pl-4 text-right">
-                                            <Button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    openEvidenceModal(t);
-                                                }}
-                                                className="bg-corporate-accent hover:bg-corporate-blue text-white rounded-lg py-2.5 shadow-sm text-sm cursor-pointer ml-auto"
-                                            >
-                                                <UploadCloud className="w-4 h-4 mr-2" />
-                                                Atender / Subir Evidencia
-                                            </Button>
-                                        </td>
+                                                        <UploadCloud className="w-4 h-4 mr-2" />
+                                                        Atender / Subir Evidencia
+                                                    </Button>
+                                                )}
+                                            </td>
                                     </tr>
                                     {t.evidencias && t.evidencias.length > 0 && (
                                         <tr onClick={(e) => e.stopPropagation()} className="bg-slate-50/30">
@@ -364,8 +401,9 @@ export default function MisTareasPage() {
                                             </td>
                                         </tr>
                                     )}
-                                </Fragment>
-                            ))}
+                                    </Fragment>
+                                );
+                            })}
                             {filteredTasks.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="py-12 text-center text-sm text-gray-500">
@@ -389,6 +427,14 @@ export default function MisTareasPage() {
                 isOpen={isDetailOpen}
                 onClose={() => setIsDetailOpen(false)}
                 task={selectedTaskForDetail}
+                onRefreshNeeded={fetchTasks}
+                onUploadEvidence={(t) => {
+                    setIsDetailOpen(false);
+                    const originalTask = tasksList.find(item => item.id === t.idTarea);
+                    if (originalTask) {
+                        openEvidenceModal(originalTask);
+                    }
+                }}
             />
 
             <EvidenciaDetailSlideOver

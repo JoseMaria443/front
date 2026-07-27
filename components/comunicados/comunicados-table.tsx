@@ -16,15 +16,46 @@ const medioStyles: Record<string, string> = {
     "Sistema SICEEA": "bg-purple-50 text-purple-600 border-purple-100",
 };
 
-const getEstadoBadge = (estado?: string) => {
-    switch (estado?.toLowerCase()) {
-        case "completada":
-            return "bg-emerald-50 text-emerald-600 border-emerald-100";
-        case "en progreso":
+const getEstadoColorClasses = (estado?: string) => {
+    const est = (estado || "asignada").toLowerCase();
+    switch (est) {
+        case "en proceso":
         case "en-proceso":
-            return "bg-amber-50 text-amber-600 border-amber-100";
+            return {
+                badge: "bg-amber-50 text-amber-600 border-amber-100",
+                border: "border-l-amber-500"
+            };
+        case "entregada":
+            return {
+                badge: "bg-indigo-50 text-indigo-600 border-indigo-100",
+                border: "border-l-indigo-500"
+            };
+        case "revisada":
+            return {
+                badge: "bg-emerald-50 text-emerald-600 border-emerald-100",
+                border: "border-l-emerald-500"
+            };
+        case "rechazada":
+            return {
+                badge: "bg-red-50 text-red-600 border-red-100",
+                border: "border-l-red-500"
+            };
+        case "vencida":
+            return {
+                badge: "bg-orange-50 text-orange-600 border-orange-100",
+                border: "border-l-orange-500"
+            };
+        case "cancelada":
+            return {
+                badge: "bg-gray-50 text-gray-500 border-gray-200",
+                border: "border-l-gray-400"
+            };
+        case "asignada":
         default:
-            return "bg-slate-50 text-slate-500 border-slate-200";
+            return {
+                badge: "bg-slate-50 text-slate-500 border-slate-200",
+                border: "border-l-slate-400"
+            };
     }
 };
 
@@ -215,8 +246,8 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
         setIsNewTaskOpen(true);
     };
 
-    const handleOpenEvidence = (comunicadoId: string, task: Tarea, e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleOpenEvidence = (comunicadoId: string, task: Tarea, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
         setActiveTaskForEvidence({ comunicadoId, task });
         setIsEvidenceOpen(true);
     };
@@ -341,37 +372,43 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                 {/* Task List (Nivel 2) */}
                                                 {item.tareas && item.tareas.length > 0 ? (
                                                     <div className="space-y-4">
-                                                        {item.tareas.map((task) => (
-                                                            <div 
-                                                                key={task.idTarea} 
-                                                                onClick={() => {
-                                                                    setSelectedTaskForDetail(task);
-                                                                    setIsTaskDetailSlideOverOpen(true);
-                                                                }}
-                                                                className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm space-y-3 hover:bg-gray-50/50 cursor-pointer transition-colors duration-150"
-                                                            >
-                                                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
-                                                                    <div>
-                                                                        <h5 className="text-sm font-bold text-corporate-dark">
-                                                                            {task.resumenActividad}
-                                                                        </h5>
-                                                                        <p className="text-xs text-gray-500 mt-0.5">
-                                                                            {task.descripcion}
-                                                                        </p>
+                                                        {item.tareas.map((task) => {
+                                                            const estadoNombre = typeof task.estado === 'string' ? task.estado : (task.estado?.nombre || "Asignada");
+                                                            const estadoClasses = getEstadoColorClasses(estadoNombre);
+                                                            const isTerminal = ['revisada', 'cancelada'].includes(estadoNombre.toLowerCase());
+                                                            return (
+                                                                <div 
+                                                                    key={task.idTarea} 
+                                                                    onClick={() => {
+                                                                        setSelectedTaskForDetail(task);
+                                                                        setIsTaskDetailSlideOverOpen(true);
+                                                                    }}
+                                                                    className={`bg-white border border-gray-100 border-l-4 ${estadoClasses.border} rounded-xl p-4 shadow-sm space-y-3 hover:bg-gray-50/50 cursor-pointer transition-colors duration-150`}
+                                                                >
+                                                                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                                                                        <div>
+                                                                            <h5 className="text-sm font-bold text-corporate-dark">
+                                                                                {task.resumenActividad}
+                                                                            </h5>
+                                                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                                                {task.descripcion}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${estadoClasses.badge}`}>
+                                                                                {task.estado?.nombre || "Asignada"}
+                                                                            </span>
+                                                                            {!isTerminal && (
+                                                                                <button
+                                                                                    onClick={(e) => handleOpenEvidence(item.idComunicado, task, e)}
+                                                                                    className="inline-flex items-center gap-1 text-xs font-semibold text-corporate-accent hover:bg-blue-50/55 p-1.5 rounded-lg transition-colors border border-corporate-accent/20 cursor-pointer"
+                                                                                >
+                                                                                    <UploadCloud className="h-3.5 w-3.5" />
+                                                                                    Subir Evidencia
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="flex items-center gap-3">
-                                                                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${getEstadoBadge(task.estado?.nombre)}`}>
-                                                                            {task.estado?.nombre || "Asignada"}
-                                                                        </span>
-                                                                        <button
-                                                                            onClick={(e) => handleOpenEvidence(item.idComunicado, task, e)}
-                                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-corporate-accent hover:bg-blue-50/55 p-1.5 rounded-lg transition-colors border border-corporate-accent/20 cursor-pointer"
-                                                                        >
-                                                                            <UploadCloud className="h-3.5 w-3.5" />
-                                                                            Subir Evidencia
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
 
                                                                 {/* Responsables & Colaboradores */}
                                                                 <div className="flex flex-wrap items-center gap-6 text-xs border-t border-gray-50 pt-2.5">
@@ -457,8 +494,9 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                         </div>
                                                                     </div>
                                                                 )}
-                                                            </div>
-                                                        ))}
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 ) : (
                                                     <p className="text-xs text-gray-400 italic text-center py-4">
@@ -510,6 +548,11 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                 isOpen={isTaskDetailSlideOverOpen}
                 onClose={() => setIsTaskDetailSlideOverOpen(false)}
                 task={selectedTaskForDetail}
+                onRefreshNeeded={onRefreshNeeded}
+                onUploadEvidence={(t) => {
+                    setIsTaskDetailSlideOverOpen(false);
+                    handleOpenEvidence(t.idComunicado, t);
+                }}
             />
 
             <EvidenciaDetailSlideOver
