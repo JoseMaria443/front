@@ -206,34 +206,29 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                     </div>
 
                     <div className="space-y-2 border-t border-gray-100 pt-4">
-                        <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Responsables</span>
+                        <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Personal Asignado</span>
                         <div className="space-y-2">
                             {task.responsables?.map((r, i) => (
-                                <div key={i} className="flex items-center gap-2.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
-                                    <div className="w-8 h-8 rounded-full bg-corporate-blue text-white text-xs font-bold flex items-center justify-center">
-                                        {getInitials(r.responsable?.nombre)}
+                                <div key={`resp-${i}`} className="flex items-center justify-between gap-2.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-full bg-corporate-blue text-white text-xs font-bold flex items-center justify-center shrink-0">
+                                            {getInitials(r.responsable?.nombre)}
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-corporate-dark">{r.responsable?.nombre}</p>
+                                            <p className="text-[10px] text-gray-400">{r.responsable?.email}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-corporate-dark">{r.responsable?.nombre}</p>
-                                        <p className="text-[10px] text-gray-400">{r.responsable?.email}</p>
-                                    </div>
+                                    <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-[9px] font-bold shrink-0">
+                                        Responsable
+                                    </span>
                                 </div>
                             ))}
-                            {(!task.responsables || task.responsables.length === 0) && (
-                                <p className="text-xs text-gray-400 italic">Sin responsables asignados</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* @ts-ignore */}
-                    {task.colaboradores && task.colaboradores.length > 0 && (
-                        <div className="space-y-2 border-t border-gray-100 pt-4">
-                            <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Colaboradores</span>
-                            <div className="space-y-2">
-                                {/* @ts-ignore */}
-                                {task.colaboradores.map((colab, i) => (
-                                    <div key={i} className="flex items-center gap-2.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
-                                        <div className="w-8 h-8 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center">
+                            {/* @ts-ignore */}
+                            {task.colaboradores?.map((colab, i) => (
+                                <div key={`colab-${i}`} className="flex items-center justify-between gap-2.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
                                             {getInitials(colab.nombre)}
                                         </div>
                                         <div>
@@ -241,10 +236,16 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                                             <p className="text-[10px] text-gray-400">{colab.email}</p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                    <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-600 px-2.5 py-0.5 text-[9px] font-bold shrink-0">
+                                        Colaborador
+                                    </span>
+                                </div>
+                            ))}
+                            {(!task.responsables || task.responsables.length === 0) && (!task.colaboradores || task.colaboradores.length === 0) && (
+                                <p className="text-xs text-gray-400 italic">Sin personal asignado</p>
+                            )}
                         </div>
-                    )}
+                    </div>
 
                     {/* Evidencias en SlideOver de Detalles */}
                     {task.evidencias && task.evidencias.length > 0 && (
