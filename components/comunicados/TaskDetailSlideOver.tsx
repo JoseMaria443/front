@@ -87,6 +87,8 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
     const estadoNombre = typeof task.estado === 'string' ? task.estado : (task.estado?.nombre || "Asignada");
     const estadoName = estadoNombre.toLowerCase();
     const isTerminal = ['revisada', 'cancelada'].includes(estadoName);
+    const isAsignada = estadoName === "asignada";
+    const showUploadButton = ['en proceso', 'en-proceso', 'rechazada', 'vencida'].includes(estadoName);
 
     const estadoClasses = getEstadoColorClasses(estadoNombre);
 
@@ -120,6 +122,20 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
         }
     };
 
+    const handleStartTask = async () => {
+        setIsSubmitting(true);
+        setActionError("");
+        try {
+            await api.patch(`/tareas/${task.idTarea}/en-proceso`);
+            if (onRefreshNeeded) onRefreshNeeded();
+        } catch (err: any) {
+            console.error("Error starting task:", err);
+            setActionError(err.response?.data?.message || err.response?.data?.detail || "No se pudo comenzar la tarea.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex justify-end">
             <div
@@ -138,7 +154,7 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                         </h2>
                     </div>
                     <div className="flex items-center gap-2">
-                        {!isTerminal && onUploadEvidence && (
+                        {showUploadButton && onUploadEvidence && (
                             <button
                                 onClick={() => onUploadEvidence(task)}
                                 className="inline-flex items-center gap-1.5 text-xs font-bold text-corporate-accent hover:text-corporate-blue transition-colors bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm cursor-pointer"
@@ -286,7 +302,16 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                         </div>
                     </div>
                 ) : (
-                    <div className="border-t border-gray-100 p-6 bg-gray-50 flex justify-end shrink-0">
+                    <div className="border-t border-gray-100 p-6 bg-gray-50 flex justify-end shrink-0 gap-3">
+                        {isAsignada && (
+                            <Button
+                                onClick={handleStartTask}
+                                disabled={isSubmitting}
+                                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                            >
+                                {isSubmitting ? "Cargando..." : "Comenzar Tarea"}
+                            </Button>
+                        )}
                         <button
                             onClick={onClose}
                             className="px-4 py-2 bg-corporate-blue text-white rounded-lg text-xs font-semibold hover:bg-corporate-dark transition-colors"

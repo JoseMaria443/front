@@ -398,7 +398,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                                                             <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${estadoClasses.badge}`}>
                                                                                 {task.estado?.nombre || "Asignada"}
                                                                             </span>
-                                                                            {!isTerminal && (
+                                                                            {['en proceso', 'en-proceso', 'rechazada', 'vencida'].includes(estadoNombre.toLowerCase()) && (
                                                                                 <button
                                                                                     onClick={(e) => handleOpenEvidence(item.idComunicado, task, e)}
                                                                                     className="inline-flex items-center gap-1 text-xs font-semibold text-corporate-accent hover:bg-blue-50/55 p-1.5 rounded-lg transition-colors border border-corporate-accent/20 cursor-pointer"
