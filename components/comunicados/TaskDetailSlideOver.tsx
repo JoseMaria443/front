@@ -211,7 +211,7 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                         <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Personal Asignado</span>
                         <div className="space-y-2">
                             {task.responsables?.map((r, i) => {
-                                const rolName = (r as any).rolNombre || "Responsable";
+                                const rolName = r.rolNombre || "Responsable";
                                 const isColab = rolName.toLowerCase().includes("colaborador");
                                 return (
                                     <div key={`resp-${i}`} className="flex items-center justify-between gap-2.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
@@ -236,9 +236,8 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                                     </div>
                                 );
                             })}
-                            {/* @ts-ignore */}
                             {task.colaboradores?.map((colab, i) => {
-                                const rolName = (colab as any).rolNombre || "Colaborador";
+                                const rolName = colab.rolNombre || "Colaborador";
                                 const isColab = rolName.toLowerCase().includes("colaborador");
                                 return (
                                     <div key={`colab-${i}`} className="flex items-center justify-between gap-2.5 bg-gray-50 p-2 rounded-xl border border-gray-100">

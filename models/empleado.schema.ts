@@ -8,6 +8,7 @@ export const EmpleadoSchema = z.object({
     idArea: z.string().uuid(),
     activo: z.boolean().default(true),
     fechaRegistro: z.string().datetime().optional(),
+    rolNombre: z.string().optional(),
 
     area: AreaSchema.optional(),
     cargos: z.array(CargoSchema).optional(),

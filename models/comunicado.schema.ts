@@ -24,6 +24,7 @@ export type ArchivoEvidencia = z.infer<typeof ArchivoEvidenciaSchema>;
 export const TareaResponsableSchema = z.object({
     idResponsable: z.string().uuid(),
     idRolResponsable: z.string().uuid(),
+    rolNombre: z.string().optional(),
 
     responsable: EmpleadoSchema.optional(),
     rol: RolResponsableSchema.optional(),
