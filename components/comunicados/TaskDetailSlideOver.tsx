@@ -211,8 +211,8 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                         <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Personal Asignado</span>
                         <div className="space-y-2">
                             {task.responsables?.map((r, i) => {
-                                const rolName = r.rolNombre || "Responsable";
-                                const isColab = rolName.toLowerCase().includes("colaborador");
+                                const rolNormalized = (r.rolNombre || "Responsable").toLowerCase();
+                                const isColab = rolNormalized.includes("colaborador") || rolNormalized.includes("apoyo");
                                 return (
                                     <div key={`resp-${i}`} className="flex items-center justify-between gap-2.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
                                         <div className="flex items-center gap-2.5">
@@ -230,15 +230,15 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-[9px] font-bold shrink-0">
-                                                {rolName}
+                                                Responsable
                                             </span>
                                         )}
                                     </div>
                                 );
                             })}
                             {task.colaboradores?.map((colab, i) => {
-                                const rolName = colab.rolNombre || "Colaborador";
-                                const isColab = rolName.toLowerCase().includes("colaborador");
+                                const rolNormalized = (colab.rolNombre || "Colaborador").toLowerCase();
+                                const isColab = rolNormalized.includes("colaborador") || rolNormalized.includes("apoyo");
                                 return (
                                     <div key={`colab-${i}`} className="flex items-center justify-between gap-2.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
                                         <div className="flex items-center gap-2.5">
@@ -256,7 +256,7 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-[9px] font-bold shrink-0">
-                                                {rolName}
+                                                Responsable
                                             </span>
                                         )}
                                     </div>
