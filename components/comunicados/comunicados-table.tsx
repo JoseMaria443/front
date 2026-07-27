@@ -267,8 +267,10 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                         idTarea: task.idTarea,
                         doi: e.doi,
                         descripcion: e.descripcion,
-                        urlArchivo: e.urlArchivo,
-                        nombreOriginal: e.nombreOriginal
+                        archivos: e.urlArchivo ? [{
+                            urlArchivo: e.urlArchivo,
+                            nombreOriginal: e.nombreOriginal || "evidencia.pdf"
+                        }] : []
                     };
                     await api.post('/evidencias/', payload);
                 }

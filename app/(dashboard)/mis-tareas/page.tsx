@@ -193,8 +193,10 @@ export default function MisTareasPage() {
                         idTarea: taskId,
                         doi: e.doi,
                         descripcion: e.descripcion,
-                        urlArchivo: e.urlArchivo,
-                        nombreOriginal: e.nombreOriginal
+                        archivos: e.urlArchivo ? [{
+                            urlArchivo: e.urlArchivo,
+                            nombreOriginal: e.nombreOriginal || "evidencia.pdf"
+                        }] : []
                     };
                     await api.post('/evidencias/', payload);
                 }
