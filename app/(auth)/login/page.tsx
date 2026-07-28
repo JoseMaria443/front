@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 import { Input } from "../../../components/ui/Input";
 import { Button } from "../../../components/ui/Button";
 import { authService } from "../../../services/auth.service";
@@ -14,6 +15,7 @@ export default function LoginPage() {
 
     const [email, setEmail] = useState("m.martinez@universidad.edu.mx");
     const [password, setPassword] = useState("123456");
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,8 +29,8 @@ export default function LoginPage() {
             login(user, token);
 
             router.push("/dashboard");
-        } catch (err: any) {
-            const msg = err.response?.data?.message || err.response?.data?.detail || "Credenciales incorrectas. Intenta de nuevo.";
+        } catch (error: any) {
+            const msg = error.response?.data?.message || error.response?.data?.detail || "Credenciales incorrectas. Intenta de nuevo.";
             setError(msg);
         } finally {
             setIsLoading(false);
@@ -38,10 +40,12 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen w-full relative flex bg-corporate-light overflow-hidden">
             <div className="absolute inset-y-0 left-0 w-[50vw] xl:w-[53vw] pointer-events-none z-0 hidden lg:block">
-                <img
+                <Image
                     src="/login-bg.svg"
                     alt="Fondo de onda"
-                    className="w-full h-full object-cover object-right"
+                    fill
+                    className="object-cover object-right"
+                    priority
                 />
             </div>
 
@@ -104,18 +108,25 @@ export default function LoginPage() {
                                             </svg>
                                         </div>
                                         <Input
-                                            type="password"
+                                            type={showPassword ? "text" : "password"}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="pl-10 h-12 bg-[#3f4f66] border-none text-white placeholder:text-white/60"
+                                            className="pl-10 pr-10 h-12 bg-[#3f4f66] border-none text-white placeholder:text-white/60"
                                             placeholder="••••••••"
                                             required
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center z-10 text-white/60 hover:text-white transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                        </button>
                                     </div>
                                 </div>
 
                                 {error && (
-                                    <p className="text-red-500 text-sm text-center font-medium bg-red-50 py-2 rounded-md">
+                                    <p className="text-red-500 text-sm text-center font-medium bg-red-50 py-2 rounded-md animate-in fade-in slide-in-from-top-2 duration-300">
                                         {error}
                                     </p>
                                 )}

@@ -9,7 +9,7 @@ export function Topbar() {
 
     // pequeña utilidad para capitalizar la ruta actual y usarla como título, ya no declaramos multiples de momento
     const pageTitle = pathname.split("/").pop() || "Dashboard";
-    const formattedTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1).replace("-", " ");
+    const formattedTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1).replaceAll("-", " ");
 
     const getInitials = (name?: string) => {
         if (!name) return "US";

@@ -22,6 +22,7 @@ const bottomNavItems = [
 
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
     const user = useSessionStore((state) => state.user);
@@ -129,7 +130,7 @@ export function Sidebar() {
                     </div>
                     
                     <button
-                        onClick={handleLogout}
+                        onClick={() => setShowLogoutConfirm(true)}
                         className={cn(
                             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-red-950/30 hover:text-red-400 transition-colors cursor-pointer w-full text-left",
                             collapsed && "justify-center px-2"
@@ -141,6 +142,30 @@ export function Sidebar() {
                     </button>
                 </div>
             </div>
+
+            {showLogoutConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all">
+                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-xl w-full max-w-sm m-4 animate-in fade-in zoom-in duration-200">
+                        <h3 className="text-xl font-bold text-white mb-2">Cerrar Sesión</h3>
+                        <p className="text-slate-400 mb-6 text-sm">¿Estás seguro de que deseas salir de tu cuenta?</p>
+                        <div className="flex justify-end gap-3">
+                            <Button 
+                                variant="ghost" 
+                                onClick={() => setShowLogoutConfirm(false)}
+                                className="text-slate-300 hover:text-white hover:bg-slate-800"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button 
+                                onClick={handleLogout}
+                                className="bg-red-600 hover:bg-red-700 text-white border-none"
+                            >
+                                Salir
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </aside>
     );
 }
