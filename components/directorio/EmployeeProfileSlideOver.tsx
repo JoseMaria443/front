@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, User, Calendar, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { X, User, Calendar, CheckCircle2, AlertTriangle, ShieldCheck, Lock } from "lucide-react";
 import { Button } from "../ui/Button";
 import { api } from "../../services/api.config";
 import { useSessionStore } from "../../store/session.store";
+import { authService } from "../../services/auth.service";
+import { useToast } from "../../components/providers/ToastProvider";
 
 interface HistorialEstatus {
     id: string;
@@ -38,6 +40,12 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
     const [isLoading, setIsLoading] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState("");
+
+    // Estado local para cambio de contraseña
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirm: '' });
+    const [passwordError, setPasswordError] = useState('');
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     const currentUser = useSessionStore(state => state.user);
 
@@ -123,6 +131,29 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
 
     const isSelf = detail?.id === currentUser?.idEmpleado;
     const isSwitchDisabled = isUpdating || isSelf || !isAuthorized;
+
+    const handleChangePassword = async () => {
+        if (!detail) return;
+        setPasswordError('');
+        setIsChangingPassword(true);
+        try {
+            // TODO: PATCH /api/empleado/{id}/password
+            const res = await authService.changePassword(detail.id, {
+                password: passwordForm.newPassword,
+                password_confirmation: passwordForm.confirm
+            });
+            if (res.success) {
+                useToast().addToast(res.message || 'Contraseña actualizada', 'success');
+                setIsChangePasswordOpen(false);
+            } else {
+                setPasswordError(res.message || 'No se pudo actualizar la contraseña.');
+            }
+        } catch (err) {
+            setPasswordError('Error inesperado al actualizar la contraseña.');
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -223,6 +254,60 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
                                         <span className="text-xs text-gray-400 italic">Ningún cargo asignado</span>
                                     )}
                                 </div>
+                            </div>
+
+                            {/* Cambiar contraseña */}
+                            <div className="space-y-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => { setIsChangePasswordOpen(true); setPasswordForm({ newPassword: '', confirm: '' }); setPasswordError(''); }}
+                                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 shadow-sm transition-colors"
+                                >
+                                    <Lock className="h-3.5 w-3.5" />
+                                    Cambiar contraseña
+                                </button>
+
+                                {isChangePasswordOpen && (
+                                    <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-3">
+                                        <p className="text-xs font-bold text-gray-700">Actualizar contraseña</p>
+                                        <div className="space-y-2">
+                                            <input
+                                                type="password"
+                                                placeholder="Nueva contraseña"
+                                                value={passwordForm.newPassword}
+                                                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-corporate-accent focus:ring-1 focus:ring-corporate-accent transition-all"
+                                            />
+                                            <input
+                                                type="password"
+                                                placeholder="Confirmar contraseña"
+                                                value={passwordForm.confirm}
+                                                onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-corporate-accent focus:ring-1 focus:ring-corporate-accent transition-all"
+                                            />
+                                            {passwordError && (
+                                                <p className="text-[11px] text-red-600 font-medium bg-red-50 p-2 rounded-lg border border-red-100">{passwordError}</p>
+                                            )}
+                                            <div className="flex items-center justify-end gap-2 pt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setIsChangePasswordOpen(false); setPasswordError(''); }}
+                                                    className="px-3 py-1.5 text-xs font-semibold text-gray-500 hover:text-gray-700"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={isChangingPassword}
+                                                    onClick={handleChangePassword}
+                                                    className="px-4 py-1.5 text-xs font-semibold bg-corporate-blue text-white rounded-lg hover:bg-corporate-dark transition-colors disabled:opacity-50"
+                                                >
+                                                    {isChangingPassword ? 'Guardando...' : 'Guardar'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Status Timeline History */}

@@ -80,9 +80,14 @@ const formatRegistroDate = (dateStr?: string | Date) => {
 interface ComunicadosTableProps {
     refreshKey: number;
     onRefreshNeeded: () => void;
+    filters?: {
+        search: string;
+        tipo: string;
+        area: string;
+    };
 }
 
-export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTableProps) {
+export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: ComunicadosTableProps) {
     const [comunicadosList, setComunicadosList] = useState<Comunicado[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -223,6 +228,33 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
         }
     };
 
+    // Filtrado en cliente sobre los datos ya cargados
+    const getFilteredComunicados = () => {
+        let filtered = comunicadosList;
+
+        if (filters) {
+            if (filters.search) {
+                const searchLower = filters.search.toLowerCase();
+                filtered = filtered.filter(c =>
+                    c.folioDoi.toLowerCase().includes(searchLower) ||
+                    c.tema.toLowerCase().includes(searchLower)
+                );
+            }
+
+            if (filters.tipo && filters.tipo !== "all") {
+                filtered = filtered.filter(c => c.tipoComunicado?.nombre === filters.tipo);
+            }
+
+            if (filters.area && filters.area !== "all") {
+                filtered = filtered.filter(c => c.areaEmisoraNombre === filters.area);
+            }
+        }
+
+        return filtered.sort((a, b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime());
+    };
+
+    const comunicadosFiltrados = getFilteredComunicados();
+
     useEffect(() => {
         fetchComunicados();
     }, [refreshKey]);
@@ -303,7 +335,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                     Cargando comunicados...
                                 </td>
                             </tr>
-                        ) : refreshKey >= 0 && comunicadosList.map((item) => {
+                        ) : refreshKey >= 0 && comunicadosFiltrados.map((item) => {
                             const isExpanded = expandedRows[item.idComunicado] || false;
                             const medioNombre = item.medioRecepcion?.nombre || "Correo Electrónico";
                             const estiloMedio = medioStyles[medioNombre] || "bg-gray-50 text-gray-600 border-gray-200";
@@ -511,7 +543,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded }: ComunicadosTab
                                 </tr>
                             );
                         })}
-                        {!isLoading && refreshKey >= 0 && comunicadosList.length === 0 && (
+                        {!isLoading && refreshKey >= 0 && comunicadosFiltrados.length === 0 && (
                             <tr>
                                 <td colSpan={6} className="py-12 text-center text-sm text-gray-500">
                                     No hay comunicados registrados

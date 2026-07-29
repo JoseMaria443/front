@@ -13,6 +13,11 @@ export default function ComunicadosPage() {
     const [refreshKey, setRefreshKey] = useState(0);
     const [isNewComunicadoOpen, setIsNewComunicadoOpen] = useState(false);
 
+    // Filtros controlados
+    const [search, setSearch] = useState("");
+    const [tipo, setTipo] = useState("all");
+    const [area, setArea] = useState("all");
+
     const triggerRefresh = () => {
         setRefreshKey(prev => prev + 1);
     };
@@ -34,7 +39,7 @@ export default function ComunicadosPage() {
                         {comunicadosCount} comunicados · Ciclo Ene-Jun 2026
                     </p>
                 </div>
-                <Button 
+                <Button
                     onClick={() => setIsNewComunicadoOpen(true)}
                     className="rounded-full shadow-md px-6 cursor-pointer"
                 >
@@ -43,9 +48,20 @@ export default function ComunicadosPage() {
                 </Button>
             </div>
 
-            <ComunicadosFilters />
+            <ComunicadosFilters
+                search={search}
+                onSearchChange={setSearch}
+                tipo={tipo}
+                onTipoChange={setTipo}
+                area={area}
+                onAreaChange={setArea}
+            />
 
-            <ComunicadosTable refreshKey={refreshKey} onRefreshNeeded={triggerRefresh} />
+            <ComunicadosTable
+                refreshKey={refreshKey}
+                onRefreshNeeded={triggerRefresh}
+                filters={{ search, tipo, area }}
+            />
 
             <NewComunicadoSlideOver
                 isOpen={isNewComunicadoOpen}
