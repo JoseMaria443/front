@@ -3,6 +3,20 @@
 import { useSessionStore } from "../../store/session.store"; //lectura de zustand de usuario nombre global
 import { usePathname } from "next/navigation";
 
+// Función para obtener el ciclo cuatrimestral basado en la fecha actual
+const obtenerCicloActual = () => {
+    const mes = new Date().getMonth(); 
+    const año = new Date().getFullYear();
+
+    if (mes >= 0 && mes <= 3) {
+        return `Ciclo Enero-Abril ${año}`;
+    } else if (mes >= 4 && mes <= 7) {
+        return `Ciclo Mayo-Agosto ${año}`;
+    } else {
+        return `Ciclo Septiembre-Diciembre ${año}`;
+    }
+};
+
 export function Topbar() {
     const user = useSessionStore((state) => state.user);
     const pathname = usePathname();
@@ -29,7 +43,8 @@ export function Topbar() {
                 <div className="flex items-center gap-3">
                     <div className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700 bg-white">
                         <span className="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
-                        Ciclo Ene-Jun 2026
+                        {/* Aquí mandamos a llamar nuestra función dinámica */}
+                        {obtenerCicloActual()}
                     </div>
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-corporate-blue text-sm font-semibold text-white shadow-sm">
                         {getInitials(user?.nombre)}
