@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Calendar, UploadCloud, AlertTriangle } from "lucide-react";
+import toast from "react-hot-toast"; // <-- Importamos la librería de notificaciones
 import type { Tarea } from "../../models/comunicado.schema";
 import { EvidenciaDetailSlideOver } from "./EvidenciaDetailSlideOver";
 import { useSessionStore } from "../../store/session.store";
@@ -97,11 +98,13 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
         setActionError("");
         try {
             await api.patch(`/tareas/${task.idTarea}/revisar`);
+            toast.success("Tarea aprobada correctamente"); // <-- Feedback visual de éxito
             if (onRefreshNeeded) onRefreshNeeded();
-            onClose();
+            onClose(); // <-- Cierra el modal automáticamente
         } catch (err: any) {
             console.error("Error approving task:", err);
             setActionError(err.response?.data?.message || err.response?.data?.detail || "No se pudo aprobar la tarea.");
+            toast.error("Error al aprobar la tarea"); // <-- Feedback visual de error
         } finally {
             setIsSubmitting(false);
         }
@@ -112,11 +115,13 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
         setActionError("");
         try {
             await api.patch(`/tareas/${task.idTarea}/rechazar`);
+            toast.success("Tarea rechazada"); // <-- Feedback visual de éxito
             if (onRefreshNeeded) onRefreshNeeded();
-            onClose();
+            onClose(); // <-- Cierra el modal automáticamente
         } catch (err: any) {
             console.error("Error rejecting task:", err);
             setActionError(err.response?.data?.message || err.response?.data?.detail || "No se pudo rechazar la tarea.");
+            toast.error("Error al rechazar la tarea"); // <-- Feedback visual de error
         } finally {
             setIsSubmitting(false);
         }
@@ -127,16 +132,17 @@ export function TaskDetailSlideOver({ isOpen, onClose, task, onRefreshNeeded, on
         setActionError("");
         try {
             await api.patch(`/tareas/${task.idTarea}/en-proceso`);
+            toast.success("Estado actualizado a 'En Proceso'"); // <-- Feedback visual de éxito
             if (onRefreshNeeded) onRefreshNeeded();
+            onClose(); // <-- Cierra el modal automáticamente para ver los cambios en la tabla
         } catch (err: any) {
             console.error("Error starting task:", err);
             setActionError(err.response?.data?.message || err.response?.data?.detail || "No se pudo comenzar la tarea.");
+            toast.error("Error al comenzar la tarea"); // <-- Feedback visual de error
         } finally {
             setIsSubmitting(false);
         }
     };
-
-    console.log("DATA CRUDA DE ASIGNADOS:", task.responsables, task.colaboradores);
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end">
