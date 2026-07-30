@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useSessionStore } from "../../store/session.store";
+import { Toaster } from "react-hot-toast";
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
     const initialize = useSessionStore((state) => state.initialize);
@@ -10,5 +11,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         initialize();
     }, [initialize]);
 
-    return <>{children}</>;
+    return (
+        <>
+            {children}
+            <Toaster position="top-right" reverseOrder={false} />
+        </>
+    );
 }

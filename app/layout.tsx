@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "../components/providers/SessionProvider";
-import { Toaster } from "react-hot-toast"; // Importación agregada
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +32,6 @@ export default function RootLayout({
         <SessionProvider>
           {children}
         </SessionProvider>
-        
-        {/* <-- 2. Toaster agregado para las notificaciones globales */}
-        <Toaster position="top-right" reverseOrder={false} />
       </body>
     </html>
   );
