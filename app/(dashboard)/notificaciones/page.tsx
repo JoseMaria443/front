@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bell, Search, Filter } from "lucide-react";
-import { getNotificaciones } from "../../../services/notificaciones.service";
+import { getNotificaciones, marcarNotificacionLeida, getNoLeidasCount } from "../../../services/notificaciones.service";
 import type { Notificacion } from "../../../services/notificaciones.service";
 
 export default function NotificacionesPage() {
@@ -11,11 +11,12 @@ export default function NotificacionesPage() {
     const [search, setSearch] = useState("");
     const [filterTipo, setFilterTipo] = useState<string>("all");
     const [filterLeidas, setFilterLeidas] = useState<string>("all");
+    const [noLeidasCount, setNoLeidasCount] = useState(0);
+    const [refreshingCount, setRefreshingCount] = useState(false);
 
     const fetchNotificaciones = async () => {
         setIsLoading(true);
         try {
-            // TODO: reemplazar con GET /notificaciones
             const data = await getNotificaciones();
             setNotificaciones(data);
         } catch (err) {
@@ -25,12 +26,35 @@ export default function NotificacionesPage() {
         }
     };
 
+    const refreshUnreadCount = async () => {
+        setRefreshingCount(true);
+        try {
+            const count = await getNoLeidasCount();
+            setNoLeidasCount(count);
+        } catch (err) {
+            console.error("Error actualizando contador de no leídas:", err);
+        } finally {
+            setRefreshingCount(false);
+        }
+    };
+
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            const updated = await marcarNotificacionLeida(id);
+            setNotificaciones((prev) => prev.map((n) => (n.id === id ? updated : n)));
+            refreshUnreadCount();
+        } catch (err) {
+            console.error("Error marcando notificación como leída:", err);
+        }
+    };
+
     useEffect(() => {
         fetchNotificaciones();
+        refreshUnreadCount();
     }, []);
 
-    // Filtros controlados en cliente (mismo patrón que directorio/page.tsx)
-    const notificacionesFiltradas = notificaciones.filter(n => {
+    // Filtros controlados en cliente
+    const notificacionesFiltradas = notificaciones.filter((n) => {
         const searchLower = search.toLowerCase();
         const coincideBusqueda =
             n.titulo.toLowerCase().includes(searchLower) ||
@@ -44,14 +68,6 @@ export default function NotificacionesPage() {
 
         return coincideBusqueda && coincideTipo && coincideLeidas;
     });
-
-    // En un backend real, esto sería algo como:
-    // const queryParams = new URLSearchParams();
-    // if (search) queryParams.set("search", search);
-    // if (filterTipo !== "all") queryParams.set("tipo", filterTipo);
-    // if (filterLeidas !== "all") queryParams.set("leidas", filterLeidas);
-    // const res = await api.get(`/notificaciones?${queryParams}`);
-    // setNotificaciones(res.data);
 
     const getIconoPorTipo = (tipo: Notificacion["tipo"]) => {
         const base = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
@@ -93,8 +109,6 @@ export default function NotificacionesPage() {
         });
     };
 
-    const noLeidasCount = notificaciones.filter(n => !n.leida).length;
-
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -115,6 +129,9 @@ export default function NotificacionesPage() {
                         <Filter className="h-3.5 w-3.5" />
                         Limpiar filtros
                     </button>
+                    <div className="text-xs text-gray-500">
+                        {refreshingCount ? "Actualizando..." : `${noLeidasCount} sin leer`}
+                    </div>
                 </div>
             </div>
 
@@ -190,14 +207,26 @@ export default function NotificacionesPage() {
                                     <p className="text-xs text-gray-500 mt-1 line-clamp-2">
                                         {n.mensaje}
                                     </p>
-                                    <p className="text-[10px] text-gray-400 mt-2 font-medium">
-                                        {formatearFecha(n.fechaCreacion)}
-                                        {!n.leida && (
-                                            <span className="ml-2 inline-flex items-center rounded-full bg-blue-50 text-corporate-accent px-2 py-0.5 border border-blue-100">
-                                                Sin leer
-                                            </span>
-                                        )}
-                                    </p>
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <p className="text-[10px] text-gray-400 font-medium">
+                                            {formatearFecha(n.fechaCreacion)}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            {!n.leida && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleMarkAsRead(n.id)}
+                                                        className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-[10px] font-semibold text-gray-600 hover:bg-gray-50 shadow-sm transition-colors"
+                                                    >
+                                                        Marcar como leída
+                                                    </button>
+                                                    <span className="inline-flex items-center rounded-full bg-blue-50 text-corporate-accent px-2 py-0.5 border border-blue-100">
+                                                        Sin leer
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))}

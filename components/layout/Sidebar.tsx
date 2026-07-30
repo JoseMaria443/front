@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/Button";
 import { ChevronLeft, GraduationCap, LayoutDashboard, FileText, CheckSquare, Users, Settings, Bell, LogOut } from "lucide-react";
 import { useSessionStore } from "../../store/session.store";
+import { getNoLeidasCount } from "../../services/notificaciones.service";
 
 const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -23,6 +24,8 @@ const bottomNavItems = [
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [loadingCount, setLoadingCount] = useState(true);
     const pathname = usePathname();
     const router = useRouter();
     const user = useSessionStore((state) => state.user);
@@ -32,6 +35,21 @@ export function Sidebar() {
         logout();
         router.push("/login");
     };
+
+    useEffect(() => {
+        const fetchUnreadCount = async () => {
+            try {
+                const count = await getNoLeidasCount();
+                setUnreadCount(count);
+            } catch (err) {
+                console.error("Error cargando contador de notificaciones:", err);
+            } finally {
+                setLoadingCount(false);
+            }
+        };
+
+        fetchUnreadCount();
+    }, []);
 
     const getInitials = (name?: string) => {
         if (!name) return "US";
@@ -71,6 +89,12 @@ export function Sidebar() {
                 </Button>
             </div>
 
+            {!collapsed && !loadingCount && unreadCount > 0 && (
+                <div className="mx-4 mb-2 rounded-lg bg-corporate-accent/10 px-3 py-2 text-xs text-corporate-accent font-medium">
+                    Tienes {unreadCount} notificación{unreadCount > 1 ? "es" : ""} sin leer
+                </div>
+            )}
+
             <nav className="flex-1 overflow-y-auto py-4 px-3">
                 <ul className="space-y-1">
                     {navItems.map((item) => {
@@ -101,20 +125,27 @@ export function Sidebar() {
 
             <div className="border-t border-slate-700 py-4 px-3">
                 <ul className="space-y-1">
-                    {bottomNavItems.map((item) => (
-                        <li key={item.href}>
-                            <Link
-                                href={item.href}
-                                className={cn(
-                                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white",
-                                    collapsed && "justify-center px-2"
-                                )}
-                            >
+                {bottomNavItems.map((item) => (
+                    <li key={item.href}>
+                        <Link
+                            href={item.href}
+                            className={cn(
+                                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white",
+                                collapsed && "justify-center px-2"
+                            )}
+                        >
+                            <div className="relative">
                                 {item.icon}
-                                {!collapsed && <span>{item.label}</span>}
-                            </Link>
-                        </li>
-                    ))}
+                                {!collapsed && !loadingCount && unreadCount > 0 && (
+                                    <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-corporate-accent text-[10px] font-bold text-white">
+                                        {unreadCount > 9 ? "9+" : unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            {!collapsed && <span>{item.label}</span>}
+                        </Link>
+                    </li>
+                ))}
                 </ul>
                 <div className="mt-4 flex flex-col gap-2 border-t border-slate-700 pt-4">
                     <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
