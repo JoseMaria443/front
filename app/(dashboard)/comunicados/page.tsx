@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { ComunicadosFilters } from "../../../components/comunicados/comunicados-filters";
@@ -8,19 +8,50 @@ import { ComunicadosTable } from "../../../components/comunicados/comunicados-ta
 import { NewComunicadoSlideOver } from "../../../components/comunicados/NewComunicadoSlideOver";
 import { api } from "../../../services/api.config";
 
+interface TipoComunicado {
+    id: string;
+    nombre: string;
+}
+
+interface Area {
+    id: string;
+    nombre: string;
+}
+
 export default function ComunicadosPage() {
     const [comunicadosCount, setComunicadosCount] = useState(0);
     const [refreshKey, setRefreshKey] = useState(0);
     const [isNewComunicadoOpen, setIsNewComunicadoOpen] = useState(false);
 
+    // Catálogos
+    const [tiposComunicado, setTiposComunicado] = useState<TipoComunicado[]>([]);
+    const [areas, setAreas] = useState<Area[]>([]);
+
     // Filtros controlados
     const [search, setSearch] = useState("");
-    const [tipo, setTipo] = useState("all");
-    const [area, setArea] = useState("all");
+    const [idTipoComunicado, setIdTipoComunicado] = useState("all");
+    const [idArea, setIdArea] = useState("all");
 
     const triggerRefresh = () => {
         setRefreshKey(prev => prev + 1);
     };
+
+    const loadCatalogs = async () => {
+        try {
+            const [tiposRes, areasRes] = await Promise.all([
+                api.get<any[]>('/tipos-comunicado/todos'),
+                api.get<any[]>('/areas/todos')
+            ]);
+            setTiposComunicado(tiposRes.data);
+            setAreas(areasRes.data);
+        } catch (err) {
+            console.error("Error loading catalogs:", err);
+        }
+    };
+
+    useEffect(() => {
+        loadCatalogs();
+    }, []);
 
     useEffect(() => {
         api.get<any[]>('/comunicados').then(res => {
@@ -51,16 +82,18 @@ export default function ComunicadosPage() {
             <ComunicadosFilters
                 search={search}
                 onSearchChange={setSearch}
-                tipo={tipo}
-                onTipoChange={setTipo}
-                area={area}
-                onAreaChange={setArea}
+                idTipoComunicado={idTipoComunicado}
+                onTipoChange={setIdTipoComunicado}
+                idArea={idArea}
+                onAreaChange={setIdArea}
+                tiposComunicado={tiposComunicado}
+                areas={areas}
             />
 
             <ComunicadosTable
                 refreshKey={refreshKey}
                 onRefreshNeeded={triggerRefresh}
-                filters={{ search, tipo, area }}
+                filters={{ search, idTipoComunicado, idArea }}
             />
 
             <NewComunicadoSlideOver

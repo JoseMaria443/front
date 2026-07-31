@@ -47,6 +47,11 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
     const [passwordError, setPasswordError] = useState('');
     const [isChangingPassword, setIsChangingPassword] = useState(false);
 
+    // Estado para restablecer contraseña (Admin/Director)
+    const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+    const [temporalPassword, setTemporalPassword] = useState<string | null>(null);
+    const [isResetting, setIsResetting] = useState(false);
+
     const currentUser = useSessionStore(state => state.user);
 
     // Roles validation
@@ -137,7 +142,6 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
         setPasswordError('');
         setIsChangingPassword(true);
         try {
-            // TODO: PATCH /api/empleado/{id}/password
             const res = await authService.changePassword(detail.id, {
                 password: passwordForm.newPassword,
                 password_confirmation: passwordForm.confirm
@@ -152,6 +156,27 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
             setPasswordError('Error inesperado al actualizar la contraseña.');
         } finally {
             setIsChangingPassword(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!detail || !isAuthorized) return;
+        setIsResetting(true);
+        setTemporalPassword(null);
+        try {
+            const res = await api.post<{ temporal_password: string }>(`/api/empleado/${detail.id}/reset-password`);
+            const tempPass = res.data?.temporal_password;
+            if (tempPass) {
+                setTemporalPassword(tempPass);
+                useToast().addToast('Contraseña temporal generada. Cópiala ahora, no se volverá a mostrar.', 'success');
+            } else {
+                useToast().addToast('No se pudo generar la contraseña temporal.', 'error');
+            }
+        } catch (err: any) {
+            const msg = err.response?.data?.detail || 'No se pudo restablecer la contraseña.';
+            useToast().addToast(msg, 'error');
+        } finally {
+            setIsResetting(false);
         }
     };
 
@@ -256,16 +281,46 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
                                 </div>
                             </div>
 
-                            {/* Cambiar contraseña */}
-                            <div className="space-y-2 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => { setIsChangePasswordOpen(true); setPasswordForm({ newPassword: '', confirm: '' }); setPasswordError(''); }}
-                                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 shadow-sm transition-colors"
-                                >
-                                    <Lock className="h-3.5 w-3.5" />
-                                    Cambiar contraseña
-                                </button>
+                                {/* Cambiar contraseña */}
+                                <div className="space-y-2 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsChangePasswordOpen(true); setPasswordForm({ newPassword: '', confirm: '' }); setPasswordError(''); }}
+                                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 shadow-sm transition-colors"
+                                    >
+                                        <Lock className="h-3.5 w-3.5" />
+                                        Cambiar contraseña
+                                    </button>
+
+                                    {isAuthorized && (
+                                        <button
+                                            type="button"
+                                            onClick={handleResetPassword}
+                                            disabled={isResetting}
+                                            className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 shadow-sm transition-colors disabled:opacity-50"
+                                        >
+                                            <ShieldCheck className="h-3.5 w-3.5" />
+                                            {isResetting ? 'Restableciendo...' : 'Restablecer contraseña'}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {temporalPassword && (
+                                    <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 shadow-sm space-y-3">
+                                        <p className="text-xs font-bold text-amber-800">Contraseña temporal generada</p>
+                                        <div className="flex items-center gap-2">
+                                            <code className="flex-1 bg-white border border-amber-200 rounded-lg px-3 py-2 text-sm font-mono text-amber-900 select-all">{temporalPassword}</code>
+                                            <button
+                                                type="button"
+                                                onClick={() => navigator.clipboard.writeText(temporalPassword)}
+                                                className="px-3 py-2 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                                            >
+                                                Copiar
+                                            </button>
+                                        </div>
+                                        <p className="text-[11px] text-amber-700">Esta contraseña solo se muestra una vez. El empleado deberá cambiarla al iniciar sesión.</p>
+                                    </div>
+                                )}
 
                                 {isChangePasswordOpen && (
                                     <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-3">

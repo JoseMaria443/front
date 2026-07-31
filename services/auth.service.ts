@@ -62,25 +62,22 @@ export const authService = {
             token: access_token
         };
     },
-    // Cambio de contraseña: simula éxito/error con timeout
     changePassword: async (empleadoId: string, payload: { password: string; password_confirmation: string }): Promise<{ success: boolean; message?: string }> => {
-        // Simulación de delay de red
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        // Validaciones mínimas
         if (!payload.password || payload.password.length < 8) {
             return { success: false, message: "La contraseña debe tener al menos 8 caracteres." };
         }
         if (payload.password !== payload.password_confirmation) {
             return { success: false, message: "La confirmación no coincide con la contraseña." };
         }
-
-        // Simulación de éxito (aquí luego irá el fetch real)
-        // TODO: PATCH /api/empleado/{id}/password
-        // const res = await api.patch(`/api/empleado/${empleadoId}/password`, payload);
-        // return { success: true, message: res.data?.message || "Contraseña actualizada" };
-
-        return { success: true, message: "Contraseña actualizada correctamente." };
+        try {
+            const res = await api.patch(`/api/empleado/${empleadoId}/password`, {
+                nueva_password: payload.password
+            });
+            return { success: true, message: res.data?.message || "Contraseña actualizada correctamente." };
+        } catch (err: any) {
+            const msg = err.response?.data?.detail || "No se pudo actualizar la contraseña.";
+            return { success: false, message: msg };
+        }
     }
 };
 

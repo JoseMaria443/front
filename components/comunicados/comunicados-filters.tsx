@@ -1,15 +1,27 @@
-import { Search, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
+
+interface TipoComunicado {
+    id: string;
+    nombre: string;
+}
+
+interface Area {
+    id: string;
+    nombre: string;
+}
 
 interface ComunicadosFiltersProps {
     search: string;
     onSearchChange: (value: string) => void;
-    tipo: string;
+    idTipoComunicado: string;
     onTipoChange: (value: string) => void;
-    area: string;
+    idArea: string;
     onAreaChange: (value: string) => void;
+    tiposComunicado: TipoComunicado[];
+    areas: Area[];
 }
 
-export function ComunicadosFilters({ search, onSearchChange, tipo, onTipoChange, area, onAreaChange }: ComunicadosFiltersProps) {
+export function ComunicadosFilters({ search, onSearchChange, idTipoComunicado, onTipoChange, idArea, onAreaChange, tiposComunicado, areas }: ComunicadosFiltersProps) {
     return (
         <div className="flex flex-col gap-4 sm:flex-row mb-6">
             <div className="relative flex-1">
@@ -23,24 +35,24 @@ export function ComunicadosFilters({ search, onSearchChange, tipo, onTipoChange,
                 />
             </div>
             <select
-                value={tipo}
+                value={idTipoComunicado}
                 onChange={(e) => onTipoChange(e.target.value)}
                 className="rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-600 outline-none focus:border-corporate-accent focus:ring-1 focus:ring-corporate-accent transition-all shadow-sm min-w-[180px]"
             >
                 <option value="all">Todos los tipos</option>
-                <option value="Oficio">Oficio</option>
-                <option value="Memo">Memo</option>
-                <option value="Circular">Circular</option>
+                {tiposComunicado.map((t) => (
+                    <option key={t.id} value={t.id}>{t.nombre}</option>
+                ))}
             </select>
             <select
-                value={area}
+                value={idArea}
                 onChange={(e) => onAreaChange(e.target.value)}
                 className="rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-600 outline-none focus:border-corporate-accent focus:ring-1 focus:ring-corporate-accent transition-all shadow-sm min-w-[180px]"
             >
                 <option value="all">Todas las áreas</option>
-                <option value="rrhh">Recursos Humanos</option>
-                <option value="ti">Tecnología</option>
-                <option value="finanzas">Finanzas</option>
+                {areas.map((a) => (
+                    <option key={a.id} value={a.id}>{a.nombre}</option>
+                ))}
             </select>
         </div>
     );

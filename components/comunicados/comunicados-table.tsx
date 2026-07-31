@@ -43,7 +43,7 @@ const getEstadoColorClasses = (estado?: string) => {
         case "vencida":
             return {
                 badge: "bg-orange-50 text-orange-600 border-orange-100",
-                border: "border-l-orange-500"
+                border: "border-l-orange-400"
             };
         case "cancelada":
             return {
@@ -82,8 +82,8 @@ interface ComunicadosTableProps {
     onRefreshNeeded: () => void;
     filters?: {
         search: string;
-        tipo: string;
-        area: string;
+        idTipoComunicado: string;
+        idArea: string;
     };
 }
 
@@ -91,79 +91,83 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
     const [comunicadosList, setComunicadosList] = useState<Comunicado[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // States for row expansion
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-    
     const [selectedComunicado, setSelectedComunicado] = useState<Comunicado | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<Tarea | null>(null);
     const [isTaskDetailSlideOverOpen, setIsTaskDetailSlideOverOpen] = useState(false);
-    
     const [activeComunicadoIdForNewTask, setActiveComunicadoIdForNewTask] = useState<string | null>(null);
     const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
-    
     const [activeTaskForEvidence, setActiveTaskForEvidence] = useState<{ comunicadoId: string; task: Tarea } | null>(null);
     const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
-
     const [selectedEvidenceForDetail, setSelectedEvidenceForDetail] = useState<any | null>(null);
     const [isEvidenceDetailOpen, setIsEvidenceDetailOpen] = useState(false);
 
-    const fetchComunicados = async () => {
-        setIsLoading(true);
-        try {
-            const response = await api.get<any[]>('/comunicados/');
-            const [tiposRes, mediosRes, empsRes] = await Promise.all([
-                api.get<any[]>('/tipos-comunicado/todos'),
-                api.get<any[]>('/medios-recepcion/todos'),
-                api.get<any[]>('/api/empleado/?activo=true')
-            ]);
-            
-            const tiposMap = new Map(tiposRes.data.map(t => [t.id, t]));
-            const mediosMap = new Map(mediosRes.data.map(m => [m.id, m]));
-            const empsMap = new Map(empsRes.data.map(e => [e.id, e]));
+    // Fetch con filtros del backend
+    useEffect(() => {
+        let cancelled = false;
+        const fetchComunicados = async () => {
+            setIsLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (filters?.search) params.append('search', filters.search);
+                if (filters?.idTipoComunicado && filters.idTipoComunicado !== 'all') params.append('id_tipo_comunicado', filters.idTipoComunicado);
+                if (filters?.idArea && filters.idArea !== 'all') params.append('id_area', filters.idArea);
 
-            const mapped: Comunicado[] = response.data.map((c) => {
-                const comId = c.id;
-                const regEmp = empsMap.get(c.idEmpleadoRegistro);
+                const response = await api.get<any[]>(`/comunicados?${params.toString()}`);
+                const [tiposRes, mediosRes, empsRes] = await Promise.all([
+                    api.get<any[]>('/tipos-comunicado/todos'),
+                    api.get<any[]>('/medios-recepcion/todos'),
+                    api.get<any[]>('/api/empleado/?activo=true')
+                ]);
 
-                return {
-                    idComunicado: comId,
-                    folioDoi: c.folioDoi,
-                    numComunicado: c.numComunicado,
-                    tema: c.tema,
-                    fechaEmision: c.fechaEmision,
-                    fechaRecepcion: c.fechaRecepcion,
-                    fechaRegistro: c.fechaRegistro,
-                    idEmisor: c.idEmisor,
-                    emisorNombre: c.emisorNombre || empsMap.get(c.idEmisor)?.nombre,
-                    idTipoComunicado: c.idTipoComunicado,
-                    idMedioRecepcion: c.idMedioRecepcion,
-                    idEmpleadoRegistro: c.idEmpleadoRegistro,
-                    idEstadoComunicado: c.idEstadoComunicado,
-                    areaEmisoraNombre: c.areaEmisoraNombre,
-                    empleadoRegistroNombre: c.empleadoRegistroNombre,
-                    tipoComunicado: tiposMap.has(c.idTipoComunicado)
-                        ? { idTipoComunicado: c.idTipoComunicado, nombre: tiposMap.get(c.idTipoComunicado).nombre }
-                        : undefined,
-                    medioRecepcion: mediosMap.has(c.idMedioRecepcion)
-                        ? { idMedioRecepcion: c.idMedioRecepcion, nombre: mediosMap.get(c.idMedioRecepcion).nombre }
-                        : undefined,
-                    emisor: empsMap.has(c.idEmisor) ? {
-                        idEmpleado: c.idEmisor,
-                        nombre: empsMap.get(c.idEmisor).nombre,
-                        email: empsMap.get(c.idEmisor).email,
-                        idArea: empsMap.get(c.idEmisor).idArea,
-                        activo: empsMap.get(c.idEmisor).activo
-                    } : undefined,
-                    empleadoRegistro: regEmp ? {
-                        idEmpleado: regEmp.id,
-                        nombre: regEmp.nombre,
-                        email: regEmp.email,
-                        idArea: regEmp.idArea,
-                        activo: regEmp.activo
-                    } : undefined,
-                    tareas: (c.tareas || []).map((t: any) => {
-                        return {
+                if (cancelled) return;
+
+                const tiposMap = new Map(tiposRes.data.map((t: any) => [t.id, t]));
+                const mediosMap = new Map(mediosRes.data.map((m: any) => [m.id, m]));
+                const empsMap = new Map(empsRes.data.map((e: any) => [e.id, e]));
+
+                const mapped: Comunicado[] = response.data.map((c: any) => {
+                    const comId = c.id;
+                    const regEmp = empsMap.get(c.idEmpleadoRegistro);
+
+                    return {
+                        idComunicado: comId,
+                        folioDoi: c.folioDoi,
+                        numComunicado: c.numComunicado,
+                        tema: c.tema,
+                        fechaEmision: c.fechaEmision,
+                        fechaRecepcion: c.fechaRecepcion,
+                        fechaRegistro: c.fechaRegistro,
+                        idEmisor: c.idEmisor,
+                        emisorNombre: c.emisorNombre || empsMap.get(c.idEmisor)?.nombre,
+                        idTipoComunicado: c.idTipoComunicado,
+                        idMedioRecepcion: c.idMedioRecepcion,
+                        idEmpleadoRegistro: c.idEmpleadoRegistro,
+                        idEstadoComunicado: c.idEstadoComunicado,
+                        areaEmisoraNombre: c.areaEmisoraNombre,
+                        empleadoRegistroNombre: c.empleadoRegistroNombre,
+                        tipoComunicado: tiposMap.has(c.idTipoComunicado)
+                            ? { idTipoComunicado: c.idTipoComunicado, nombre: tiposMap.get(c.idTipoComunicado).nombre }
+                            : undefined,
+                        medioRecepcion: mediosMap.has(c.idMedioRecepcion)
+                            ? { idMedioRecepcion: c.idMedioRecepcion, nombre: mediosMap.get(c.idMedioRecepcion).nombre }
+                            : undefined,
+                        emisor: empsMap.has(c.idEmisor) ? {
+                            idEmpleado: c.idEmisor,
+                            nombre: empsMap.get(c.idEmisor).nombre,
+                            email: empsMap.get(c.idEmisor).email,
+                            idArea: empsMap.get(c.idEmisor).idArea,
+                            activo: empsMap.get(c.idEmisor).activo
+                        } : undefined,
+                        empleadoRegistro: regEmp ? {
+                            idEmpleado: regEmp.id,
+                            nombre: regEmp.nombre,
+                            email: regEmp.email,
+                            idArea: regEmp.idArea,
+                            activo: regEmp.activo
+                        } : undefined,
+                        tareas: (c.tareas || []).map((t: any) => ({
                             idTarea: t.id,
                             idComunicado: t.idComunicado,
                             idEstadoTarea: t.idEstadoTarea,
@@ -172,14 +176,12 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                             fechaEntrega: t.fechaEntrega,
                             fechaRegistro: t.fechaRegistro,
                             estado: { idEstadoTarea: t.idEstadoTarea, nombre: t.estado || "Asignada" },
-                            responsables: (t.responsables || []).map((resp: any) => {
-                                return {
-                                    idResponsable: resp.idResponsable,
-                                    idRolResponsable: resp.idRolResponsable,
-                                    rolNombre: resp.rolNombre,
-                                    responsable: resp.responsable
-                                };
-                            }),
+                            responsables: (t.responsables || []).map((resp: any) => ({
+                                idResponsable: resp.idResponsable,
+                                idRolResponsable: resp.idRolResponsable,
+                                rolNombre: resp.rolNombre,
+                                responsable: resp.responsable
+                            })),
                             colaboradores: [],
                             evidencias: (t.evidencias || []).map((ev: any) => {
                                 const emp = empsMap.get(ev.idElaborador || ev.idUsuario);
@@ -201,70 +203,39 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                                     } : undefined
                                 };
                             })
-                        };
-                    }),
-                    archivos: (c.archivos && c.archivos.length > 0)
-                        ? c.archivos.map((arch: any) => ({
-                            idArchivo: arch.idArchivo || arch.id || Math.random().toString(),
-                            urlArchivo: arch.urlArchivo,
-                            nombreOriginal: arch.nombreOriginal
-                          }))
-                        : (c.archivoUrl ? [
-                            {
+                        })),
+                        archivos: (c.archivos && c.archivos.length > 0)
+                            ? c.archivos.map((arch: any) => ({
+                                idArchivo: arch.idArchivo || arch.id || Math.random().toString(),
+                                urlArchivo: arch.urlArchivo,
+                                nombreOriginal: arch.nombreOriginal
+                              }))
+                            : (c.archivoUrl ? [{
                                 idArchivo: comId + "_file",
                                 urlArchivo: c.archivoUrl,
                                 nombreOriginal: c.archivoUrl.split('/').pop() || "archivo.pdf"
-                            }
-                          ] : [])
-                };
-            });
+                            }] : [])
+                    };
+                });
 
-            const sorted = mapped.sort((a, b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime());
-            setComunicadosList(sorted);
-        } catch (err) {
-            console.error("Error loading repository data:", err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Filtrado en cliente sobre los datos ya cargados
-    const getFilteredComunicados = () => {
-        let filtered = comunicadosList;
-
-        if (filters) {
-            if (filters.search) {
-                const searchLower = filters.search.toLowerCase();
-                filtered = filtered.filter(c =>
-                    c.folioDoi.toLowerCase().includes(searchLower) ||
-                    c.tema.toLowerCase().includes(searchLower)
-                );
+                if (!cancelled) {
+                    const sorted = mapped.sort((a: Comunicado, b: Comunicado) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime());
+                    setComunicadosList(sorted);
+                }
+            } catch (err) {
+                if (!cancelled) console.error("Error loading repository data:", err);
+            } finally {
+                if (!cancelled) setIsLoading(false);
             }
+        };
 
-            if (filters.tipo && filters.tipo !== "all") {
-                filtered = filtered.filter(c => c.tipoComunicado?.nombre === filters.tipo);
-            }
-
-            if (filters.area && filters.area !== "all") {
-                filtered = filtered.filter(c => c.areaEmisoraNombre === filters.area);
-            }
-        }
-
-        return filtered.sort((a, b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime());
-    };
-
-    const comunicadosFiltrados = getFilteredComunicados();
-
-    useEffect(() => {
         fetchComunicados();
-    }, [refreshKey]);
+        return () => { cancelled = true; };
+    }, [refreshKey, filters?.search, filters?.idTipoComunicado, filters?.idArea]);
 
     const toggleRow = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        setExpandedRows(prev => ({
-            ...prev,
-            [id]: !prev[id]
-        }));
+        setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
     const handleRowClick = (comunicado: Comunicado) => {
@@ -335,7 +306,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                                     Cargando comunicados...
                                 </td>
                             </tr>
-                        ) : refreshKey >= 0 && comunicadosFiltrados.map((item) => {
+                        ) : refreshKey >= 0 && comunicadosList.map((item) => {
                             const isExpanded = expandedRows[item.idComunicado] || false;
                             const medioNombre = item.medioRecepcion?.nombre || "Correo Electrónico";
                             const estiloMedio = medioStyles[medioNombre] || "bg-gray-50 text-gray-600 border-gray-200";
@@ -343,12 +314,11 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                             return (
                                 <tr key={item.idComunicado} className="group/row transition-all duration-200 border-b border-gray-50">
                                     <td colSpan={6} className="p-0">
-                                        {/* Main Row */}
-                                        <div 
+                                        <div
                                             onClick={() => handleRowClick(item)}
                                             className="flex items-center w-full hover:bg-gray-50/50 transition-colors cursor-pointer py-4"
                                         >
-                                            <div 
+                                            <div
                                                 onClick={(e) => toggleRow(item.idComunicado, e)}
                                                 className="w-12 flex justify-center text-gray-300 group-hover/row:text-corporate-accent transition-colors"
                                             >
@@ -365,14 +335,14 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                                                 <div className="col-span-1.5 pr-4 text-sm font-medium text-corporate-dark truncate max-w-[200px]">
                                                     {item.tema}
                                                 </div>
-                                                 <div className="col-span-1 pr-4 flex flex-col justify-center truncate">
-                                                     <span className="text-sm font-bold text-corporate-dark truncate">
-                                                         {item.emisorNombre || item.emisor?.nombre || "N/A"}
-                                                     </span>
-                                                     <span className="text-xs text-gray-400 truncate mt-0.5">
-                                                         {item.areaEmisoraNombre || "N/A"}
-                                                     </span>
-                                                 </div>
+                                                <div className="col-span-1 pr-4 flex flex-col justify-center truncate">
+                                                    <span className="text-sm font-bold text-corporate-dark truncate">
+                                                        {item.emisorNombre || item.emisor?.nombre || "N/A"}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400 truncate mt-0.5">
+                                                        {item.areaEmisoraNombre || "N/A"}
+                                                    </span>
+                                                </div>
                                                 <div className="col-span-1 text-sm tabular-nums text-gray-500">
                                                     {new Date(item.fechaEmision).toLocaleDateString('es-MX', {
                                                         year: 'numeric', month: 'short', day: 'numeric'
@@ -386,7 +356,6 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                                             </div>
                                         </div>
 
-                                        {/* Expansion Nivel 2 & 3 */}
                                         {isExpanded && (
                                             <div className="bg-slate-50/50 border-t border-gray-100/50 px-6 py-5 space-y-4 animate-in fade-in duration-200">
                                                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
@@ -403,16 +372,14 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                                                     </button>
                                                 </div>
 
-                                                {/* Task List (Nivel 2) */}
                                                 {item.tareas && item.tareas.length > 0 ? (
                                                     <div className="space-y-4">
                                                         {item.tareas.map((task) => {
                                                             const estadoNombre = typeof task.estado === 'string' ? task.estado : (task.estado?.nombre || "Asignada");
                                                             const estadoClasses = getEstadoColorClasses(estadoNombre);
-                                                            const isTerminal = ['revisada', 'cancelada'].includes(estadoNombre.toLowerCase());
                                                             return (
-                                                                <div 
-                                                                    key={task.idTarea} 
+                                                                <div
+                                                                    key={task.idTarea}
                                                                     onClick={() => {
                                                                         setSelectedTaskForDetail(task);
                                                                         setIsTaskDetailSlideOverOpen(true);
@@ -444,90 +411,83 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                                                                         </div>
                                                                     </div>
 
-                                                                {/* Responsables & Colaboradores */}
-                                                                <div className="flex flex-wrap items-center gap-6 text-xs border-t border-gray-50 pt-2.5">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="font-semibold text-gray-400">Responsables:</span>
-                                                                        <div className="flex -space-x-1.5">
-                                                                            {task.responsables?.map((r, i) => (
-                                                                                <div 
-                                                                                    key={i}
-                                                                                    title={r.responsable?.nombre}
-                                                                                    className="w-6 h-6 rounded-full bg-corporate-blue text-white text-[10px] font-bold flex items-center justify-center border border-white"
-                                                                                >
-                                                                                    {getInitials(r.responsable?.nombre)}
+                                                                    <div className="flex flex-wrap items-center gap-6 text-xs border-t border-gray-50 pt-2.5">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="font-semibold text-gray-400">Responsables:</span>
+                                                                            <div className="flex -space-x-1.5">
+                                                                                {task.responsables?.map((r: any, i: number) => (
+                                                                                    <div
+                                                                                        key={i}
+                                                                                        title={r.responsable?.nombre}
+                                                                                        className="w-6 h-6 rounded-full bg-corporate-blue text-white text-[10px] font-bold flex items-center justify-center border border-white"
+                                                                                    >
+                                                                                        {getInitials(r.responsable?.nombre)}
+                                                                                    </div>
+                                                                                ))}
+                                                                                {(!task.responsables || task.responsables.length === 0) && (
+                                                                                    <span className="text-gray-400 italic">Ninguno</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {task.colaboradores && task.colaboradores.length > 0 && (
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="font-semibold text-gray-400">Colaboradores:</span>
+                                                                                <div className="flex -space-x-1.5">
+                                                                                    {task.colaboradores.map((colab: any, i: number) => (
+                                                                                        <div
+                                                                                            key={i}
+                                                                                            title={colab.nombre}
+                                                                                            className="w-6 h-6 rounded-full bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center border border-white"
+                                                                                        >
+                                                                                            {getInitials(colab.nombre)}
+                                                                                        </div>
+                                                                                    ))}
                                                                                 </div>
-                                                                            ))}
-                                                                            {(!task.responsables || task.responsables.length === 0) && (
-                                                                                <span className="text-gray-400 italic">Ninguno</span>
-                                                                            )}
+                                                                            </div>
+                                                                        )}
+
+                                                                        <div className="flex items-center gap-1 text-gray-400">
+                                                                            <Clock className="h-3 w-3" />
+                                                                            <span>Entrega: {new Date(task.fechaEntrega).toLocaleDateString()}</span>
                                                                         </div>
                                                                     </div>
 
-                                                                    {/* Colaboradores */}
-                                                                    {task.colaboradores && task.colaboradores.length > 0 && (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <span className="font-semibold text-gray-400">Colaboradores:</span>
-                                                                            <div className="flex -space-x-1.5">
-                                                                                {task.colaboradores.map((colab, i) => (
-                                                                                    <div 
-                                                                                        key={i}
-                                                                                        title={colab.nombre}
-                                                                                        className="w-6 h-6 rounded-full bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center border border-white"
+                                                                    {task.evidencias && task.evidencias.length > 0 && (
+                                                                        <div className="mt-3 bg-slate-100/90 rounded-xl p-3 border border-slate-200/80 space-y-2 block relative z-10" onClick={(e) => e.stopPropagation()}>
+                                                                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                                                                Evidencias Cargadas ({task.evidencias.length})
+                                                                            </span>
+                                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                                                {task.evidencias.map((ev: any) => (
+                                                                                    <button
+                                                                                        key={ev.idArchivoEvidencia}
+                                                                                        type="button"
+                                                                                        onClick={(e) => handleOpenEvidenceDetail(ev, e)}
+                                                                                        className="bg-white border border-gray-100 rounded-lg p-2.5 flex items-center justify-between text-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] gap-2 hover:bg-blue-50/50 hover:border-blue-200 transition-colors cursor-pointer text-left w-full"
                                                                                     >
-                                                                                        {getInitials(colab.nombre)}
-                                                                                    </div>
+                                                                                        <div className="space-y-0.5 truncate pr-2 flex-1">
+                                                                                            <p className="font-bold text-corporate-dark truncate">
+                                                                                                {ev.nombreOriginal}
+                                                                                            </p>
+                                                                                            <p className="text-[10px] text-gray-400">
+                                                                                                DOI: <span className="font-medium text-corporate-accent">{ev.doi}</span>
+                                                                                            </p>
+                                                                                            <p className="text-[9px] text-gray-500">
+                                                                                                Subido por: <span className="font-semibold">{ev.elaborador?.nombre || "Usuario Desconocido"}</span> · {formatRegistroDate(ev.fechaRegistro)}
+                                                                                            </p>
+                                                                                        </div>
+                                                                                        <div
+                                                                                            className="inline-flex items-center justify-center p-1.5 rounded-md bg-slate-50 border border-gray-100 text-corporate-accent transition-colors"
+                                                                                            title="Ver detalles de evidencia"
+                                                                                        >
+                                                                                            <UploadCloud className="h-3.5 w-3.5" />
+                                                                                        </div>
+                                                                                    </button>
                                                                                 ))}
                                                                             </div>
                                                                         </div>
                                                                     )}
-                                                                    
-                                                                    <div className="flex items-center gap-1 text-gray-400">
-                                                                        <Clock className="h-3 w-3" />
-                                                                        <span>Entrega: {new Date(task.fechaEntrega).toLocaleDateString()}</span>
-                                                                    </div>
-                                                                </div>
-
-                                                                {(() => {
-                                                                    console.log("Evidencias de la tarea:", task.resumenActividad, task.evidencias);
-                                                                    return null;
-                                                                })()}
-
-                                                                {task.evidencias && task.evidencias.length > 0 && (
-                                                                    <div className="mt-3 bg-slate-100/90 rounded-xl p-3 border border-slate-200/80 space-y-2 block relative z-10" onClick={(e) => e.stopPropagation()}>
-                                                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                                                            Evidencias Cargadas ({task.evidencias.length})
-                                                                        </span>
-                                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                                            {task.evidencias.map((ev) => (
-                                                                                <button 
-                                                                                    key={ev.idArchivoEvidencia} 
-                                                                                    type="button"
-                                                                                    onClick={(e) => handleOpenEvidenceDetail(ev, e)}
-                                                                                    className="bg-white border border-gray-100 rounded-lg p-2.5 flex items-center justify-between text-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] gap-2 hover:bg-blue-50/50 hover:border-blue-200 transition-colors cursor-pointer text-left w-full"
-                                                                                >
-                                                                                    <div className="space-y-0.5 truncate pr-2 flex-1">
-                                                                                        <p className="font-bold text-corporate-dark truncate">
-                                                                                            {ev.nombreOriginal}
-                                                                                        </p>
-                                                                                        <p className="text-[10px] text-gray-400">
-                                                                                            DOI: <span className="font-medium text-corporate-accent">{ev.doi}</span>
-                                                                                        </p>
-                                                                                        <p className="text-[9px] text-gray-500">
-                                                                                            Subido por: <span className="font-semibold">{ev.elaborador?.nombre || "Usuario Desconocido"}</span> · {formatRegistroDate(ev.fechaRegistro)}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                    <div
-                                                                                        className="inline-flex items-center justify-center p-1.5 rounded-md bg-slate-50 border border-gray-100 text-corporate-accent transition-colors"
-                                                                                        title="Ver detalles de evidencia"
-                                                                                    >
-                                                                                        <UploadCloud className="h-3.5 w-3.5" />
-                                                                                    </div>
-                                                                                </button>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
                                                                 </div>
                                                             );
                                                         })}
@@ -543,7 +503,7 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                                 </tr>
                             );
                         })}
-                        {!isLoading && refreshKey >= 0 && comunicadosFiltrados.length === 0 && (
+                        {!isLoading && refreshKey >= 0 && comunicadosList.length === 0 && (
                             <tr>
                                 <td colSpan={6} className="py-12 text-center text-sm text-gray-500">
                                     No hay comunicados registrados
@@ -554,7 +514,6 @@ export function ComunicadosTable({ refreshKey, onRefreshNeeded, filters }: Comun
                 </table>
             </div>
 
-            {/* SlideOver Components */}
             <ComunicadoDetailSlideOver
                 isOpen={isDetailOpen}
                 onClose={() => setIsDetailOpen(false)}
