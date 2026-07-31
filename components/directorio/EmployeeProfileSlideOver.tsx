@@ -281,6 +281,7 @@ export function EmployeeProfileSlideOver({ isOpen, onClose, employeeId, areasLis
                                 </div>
                             </div>
 
+                            <div className="space-y-3">
                                 {/* Cambiar contraseña */}
                                 <div className="space-y-2 pt-2">
                                     <button
