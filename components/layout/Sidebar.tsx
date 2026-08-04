@@ -41,8 +41,9 @@ export function Sidebar() {
             try {
                 const count = await getNoLeidasCount();
                 setUnreadCount(count);
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error cargando contador de notificaciones:", err);
+                console.error("DETALLE DEL BACKEND:", err.response?.data);
             } finally {
                 setLoadingCount(false);
             }
