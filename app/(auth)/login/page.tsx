@@ -26,10 +26,51 @@ export default function LoginPage() {
 
         try {
             const { user, token } = await authService.login(email, password);
+            console.log('[Login] Token recibido:', token);
+            
+            // Limpiar cookies/localStorage viejas para evitar datos corruptos
+            if (typeof document !== 'undefined') {
+                document.cookie.split(';').forEach(c => {
+                    const name = c.split('=')[0]?.trim();
+                    if (name && (name === 'session-token' || name === 'session-user')) {
+                        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                    }
+                });
+                localStorage.removeItem('session-token');
+                localStorage.removeItem('session-user');
+            }
+            
             login(user, token);
-
+            
+            // Verificar que se guardó correctamente
+            const savedToken = typeof localStorage !== 'undefined' ? localStorage.getItem('session-token') : null;
+            const savedCookie = document.cookie.match(/session-token=([^;]+)/)?.[1] || null;
+            console.log('[Login] Token en localStorage:', savedToken);
+            console.log('[Login] Token en cookie:', savedCookie ? savedCookie.substring(0, 20) + '...' : 'NO');
+            
+            // Decodificar el JWT para inspeccionar roles y expiración
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(
+                    atob(base64)
+                        .split('')
+                        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                );
+                const decoded = JSON.parse(jsonPayload);
+                console.log('[Login] JWT decodificado:', decoded);
+            } catch (e) {
+                console.error('[Login] Error decodificando JWT:', e);
+            }
+            
+            // Esperar un tick para que el store se sincronice antes de navegar
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            console.log('[Login] Sesión guardada, redirigiendo al dashboard...');
             router.push("/dashboard");
         } catch (error: any) {
+            console.error('[Login] Error:', error);
             const msg = error.response?.data?.message || error.response?.data?.detail || "Credenciales incorrectas. Intenta de nuevo.";
             setError(msg);
         } finally {

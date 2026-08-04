@@ -1,16 +1,5 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --color-corporate-blue: #1e3a8a;
-  --color-corporate-accent: #3b82f6;
-  --color-corporate-light: #f8fafc;
-  --color-corporate-dark: #0f172a;
-  --color-corporate-surface: #ffffff;
-}
-
-body {
-  background-color: var(--color-corporate-light);
-  color: var(--color-corporate-dark);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* Resto de estilos globales */

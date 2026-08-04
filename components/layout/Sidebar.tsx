@@ -29,7 +29,14 @@ export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const user = useSessionStore((state) => state.user);
+    const token = useSessionStore((state) => state.token);
+    const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
     const logout = useSessionStore((state) => state.logout);
+
+    // Diagnóstico: muestra el estado de autenticación en consola
+    useEffect(() => {
+        console.log('[Sidebar] auth state:', { isAuthenticated, hasToken: !!token, user: user?.nombre });
+    }, [isAuthenticated, token, user]);
 
     const handleLogout = () => {
         logout();
@@ -37,19 +44,42 @@ export function Sidebar() {
     };
 
     useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+        let cancelled = false;
+
         const fetchUnreadCount = async () => {
             try {
                 const count = await getNoLeidasCount();
-                setUnreadCount(count);
+                if (!cancelled) {
+                    setUnreadCount(count);
+                }
             } catch (err) {
-                console.error("Error cargando contador de notificaciones:", err);
+                if (!cancelled) {
+                    console.error("Error cargando contador de notificaciones:", err);
+                }
             } finally {
-                setLoadingCount(false);
+                if (!cancelled) {
+                    setLoadingCount(false);
+                }
             }
         };
 
-        fetchUnreadCount();
-    }, []);
+        const tryFetch = () => {
+            if (isAuthenticated && token) {
+                fetchUnreadCount();
+            } else {
+                // Reintentar en 300ms mientras se hidrata el store
+                timeoutId = setTimeout(tryFetch, 300);
+            }
+        };
+
+        tryFetch();
+
+        return () => {
+            cancelled = true;
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [isAuthenticated, token]);
 
     const getInitials = (name?: string) => {
         if (!name) return "US";

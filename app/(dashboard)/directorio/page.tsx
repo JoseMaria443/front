@@ -24,6 +24,18 @@ export default function DirectorioPage() {
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
     const currentUser = useSessionStore(state => state.user);
+    const isAuthenticated = useSessionStore(state => state.isAuthenticated);
+    const token = useSessionStore(state => state.token);
+
+    // Diagnóstico: mostrar estado de autenticación
+    useEffect(() => {
+        console.log('[Directorio] Auth state:', {
+            isAuthenticated,
+            hasToken: !!token,
+            user: currentUser?.nombre,
+            roles: (currentUser as any)?.cargos_nombres || currentUser?.cargos || []
+        });
+    }, [isAuthenticated, token, currentUser]);
 
     // Roles validation: check if currentUser has "Administrador" or "Director"
     const roles = (currentUser as any)?.cargos_nombres || currentUser?.cargos || [];
@@ -44,7 +56,7 @@ export default function DirectorioPage() {
         }
     }, [toast]);
 
-    const fetchData = async () => {
+    const fetchData = async (retries = 2, delayMs = 500) => {
         setIsLoading(true);
         setError("");
         try {
@@ -56,6 +68,11 @@ export default function DirectorioPage() {
             setAreasList(areasRes.data);
         } catch (err: any) {
             console.error("Error loading directory data:", err);
+            if (err.response?.status === 401 && retries > 0) {
+                // Reintentar una vez más por si el token aún no está listo
+                setTimeout(() => fetchData(retries - 1, delayMs), delayMs);
+                return;
+            }
             setError("Ocurrió un error al cargar el directorio.");
         } finally {
             setIsLoading(false);
@@ -63,7 +80,24 @@ export default function DirectorioPage() {
     };
 
     useEffect(() => {
-        fetchData();
+        let timeoutId: NodeJS.Timeout;
+        let cancelled = false;
+
+        const tryFetch = () => {
+            const token = useSessionStore.getState().token;
+            if (token) {
+                fetchData();
+            } else {
+                timeoutId = setTimeout(tryFetch, 300);
+            }
+        };
+
+        tryFetch();
+
+        return () => {
+            cancelled = true;
+            if (timeoutId) clearTimeout(timeoutId);
+        };
     }, []);
 
     const toggleEmpleadoActivo = async (id: string, e: React.MouseEvent) => {
